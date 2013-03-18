@@ -14,7 +14,7 @@
 CCACHE=
 
 ifeq ($(CONFIG_TOOLCHAIN_CCACHE),y)
-export CCACHE=ccache
+export CCACHE=$(shell which ccache)
 export CCACHE_BASEDIR=$(DEVDIR)
 export CCACHE_UMASK=002
 ifneq ($(CCACHE_HARDLINK),)
