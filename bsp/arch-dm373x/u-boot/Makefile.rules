@@ -1,0 +1,27 @@
+#$L$
+# Copyright (C) 2011 Ridgerun (http://www.ridgerun.com). 
+#$L$
+
+ifeq ($(DEVDIR),)
+$(error ====== DEVDIR variable is empty, invoke this Makefile from the BSP root, or provide the path to it =====)
+endif
+include $(DEVDIR)/bsp/mach/Make.conf
+
+.PHONY: arch_build arch_clean
+
+arch_post_build:
+
+arch_build: #xloader_build
+
+arch_clean: #xloader_clean
+
+gen_ipl_bin:
+	$(V) cp $(IMAGES)/x-load.bin.ift $(IMAGES)/MLO
+
+gen_uboot_flashbin:
+ifeq ($(CONFIG_UBOOT_NAND_FLASH_MEMORY),y)
+	$(V) ln -sf $(IMAGES)/bootloader $(IMAGES)/bootloader.nandbin
+endif
+ifeq ($(CONFIG_UBOOT_ONENAND_FLASH_MEMORY),y)
+	$(V) ln -sf $(IMAGES)/bootloader $(IMAGES)/bootloader.onenandbin
+endif

@@ -1,0 +1,135 @@
+Index: ridgerun-ui-demo/src/main.cpp
+===================================================================
+--- ridgerun-ui-demo.orig/src/main.cpp	2012-05-17 11:07:04.914190059 -0600
++++ ridgerun-ui-demo/src/main.cpp	2012-05-17 11:07:39.147074120 -0600
+@@ -4,55 +4,76 @@
+ #include "uihandler.h"
+ 
+ #ifdef __ARMEL__
++#include <stdio.h>
++#include <string.h>
+ #include <stdlib.h>
+ #include <sys/ioctl.h>
+ #include <fcntl.h>
+ #include <unistd.h>
+-#include <video/davincifb_ioctl.h>
++#include <linux/videodev.h>
++#include <linux/videodev2.h>
++#include <errno.h>
+ #include <QWSServer>
+ 
+ /* This function set up the color key in the Davinci */
+ void fb_init (void){
+-    int fbfd;
+-    char enable = 1;
+ 
+-    vpbe_bitmap_blend_params_t blendparam;
+-    vpbe_backg_color_t backg;
++    int ret = 0;
++    int fd;
+ 
+-    blendparam.colorkey = 0xf81f;
+-    blendparam.enable_colorkeying = 1;
+-    blendparam.bf = 0;
+-
+-    backg.clut_select = 0;
+-    backg.color_offset = 255;
+-
+-    fbfd = open("/dev/fb0",O_RDWR);
+-    if (fbfd < 0){
+-        perror("Failed to open the framebuffer device");
+-        exit(-1);
++    /* Open a video Display logical channel in blocking mode */
++    fd = open ("/dev/video7", O_RDWR);
++    if (fd == -1) {
++        perror("Failed to open display device\n");
+     }
+-
+-    if (ioctl(fbfd,FBIO_ENABLE_DISABLE_WIN,&enable) < 0){
+-        perror("Failed to enable the OSD window");
+-        exit(-1);
++
++    struct v4l2_format fmt;
++    fmt.type = V4L2_BUF_TYPE_VIDEO_OVERLAY;
++    ret = ioctl(fd, VIDIOC_G_FMT, &fmt);
++    if (ret < 0) {
++        perror("VIDIOC_G_FMT\n");
++        close(fd);
++        exit(0);
+     }
+-
+-    if (ioctl(fbfd,FBIO_SET_BACKG_COLOR,&backg) < 0){
+-        perror("Failed to enable the OSD window: set background color");
+-        exit(-1);
++
++    fmt.fmt.win.chromakey = 0xFFE0;/* Yellow color RGB565 format */
++
++    ret = ioctl(fd, VIDIOC_S_FMT, &fmt);
++
++    if (ret < 0) {
++        perror("VIDIOC_G_FMT\n");
++        close(fd);
++        exit(0);
+     }
+ 
+-    if (ioctl(fbfd,FBIO_SET_BITMAP_BLEND_FACTOR,&blendparam) < 0){
+-        perror("Failed to set the blending factor");
+-        exit(-1);
++    struct v4l2_framebuffer framebuffer;
++    ret = ioctl (fd, VIDIOC_G_FBUF, &framebuffer);
++    if (ret < 0) {
++        perror ("VIDIOC_G_FBUF");
++        close(fd);
++        exit(1);
++    }
++
++    /* Set SRC_COLOR_KEYING if device supports that */
++    if(framebuffer.capability & V4L2_FBUF_CAP_CHROMAKEY) {
++        framebuffer.flags |= V4L2_FBUF_FLAG_CHROMAKEY;
++        framebuffer.flags &= ~V4L2_FBUF_FLAG_SRC_CHROMAKEY;
++        ret = ioctl (fd, VIDIOC_S_FBUF, &framebuffer);
++        if (ret < 0) {
++            perror ("VIDIOC_S_FBUF");
++            close(fd);
++            exit(1);
++        }
+     }
++
++    close(fd);
+ 
+-    close(fbfd);
+ }
+ #endif
+ 
+ int main(int argc, char *argv[])
+ {
++    fb_init();
+     QApplication app(argc, argv);
+ 
+     //Bind QML file:
+Index: ridgerun-ui-demo/src/qml/ridgerun-ui-demo/MainPane.qml
+===================================================================
+--- ridgerun-ui-demo.orig/src/qml/ridgerun-ui-demo/MainPane.qml	2012-05-17 11:06:02.806330396 -0600
++++ ridgerun-ui-demo/src/qml/ridgerun-ui-demo/MainPane.qml	2012-05-17 11:06:08.770626906 -0600
+@@ -19,7 +19,7 @@
+         width: 488
+         border.width: 1
+         height: 438
+-        color:"#ff00ff"
++        color:"#ffff00"
+ 
+         Loader{
+             anchors.verticalCenter : parent.verticalCenter;
+Index: ridgerun-ui-demo/src/qml/ridgerun-ui-demo/main.qml
+===================================================================
+--- ridgerun-ui-demo.orig/src/qml/ridgerun-ui-demo/main.qml	2012-05-17 11:04:43.502504531 -0600
++++ ridgerun-ui-demo/src/qml/ridgerun-ui-demo/main.qml	2012-05-17 11:05:20.314627111 -0600
+@@ -2,7 +2,7 @@
+ 
+ Rectangle {
+     id: main
+-    width: 640
++    width: 639
+     height: 480
+ 
+     property bool live_active : false

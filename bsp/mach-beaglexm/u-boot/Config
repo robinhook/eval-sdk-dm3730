@@ -1,0 +1,8 @@
+config UBOOT_NETWORKING
+	bool
+	default y
+	
+config UBOOT_UPGRADE_BOOTLOADER_ADDR
+	string
+	default "0x82000000"
+

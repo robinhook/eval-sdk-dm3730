@@ -1,0 +1,18 @@
+Index: xloader/src/Makefile
+===================================================================
+--- xloader.orig/src/Makefile	2011-01-12 14:21:44.413031897 -0600
++++ xloader/src/Makefile	2011-01-12 14:23:05.085040016 -0600
+@@ -80,11 +80,11 @@
+ #########################################################################
+ #########################################################################
+ 
+-ALL = x-load.bin System.map
++ALL = x-load.bin System.map ift
+ 
+ all:		$(ALL)
+ 
+-ift:	$(ALL) x-load.bin.ift
++ift: x-load.bin.ift
+ 
+ x-load.bin.ift: signGP System.map x-load.bin
+ 	TEXT_BASE=`grep -w _start System.map|cut -d ' ' -f1`

@@ -1,0 +1,69 @@
+; Define here the location of your development directory (this is macro)
+&KERNELDIR="kernel/linux-2.6.22"
+&DEVDIR="./"
+&T32DIR="/opt"
+&KERNELENTRY=0x80008000
+
+; Setting up 
+print "Setting up hardware..."
+screen.on
+reset
+task.reset
+break.delete
+map.reset
+mmu.reset
+symbol.reset
+system.reset
+
+system.cpu omap3530
+system.Option DACR ON          ; give Debugger global write permissions
+system.option mmuspaces on
+TrOnchip.Set DABORT OFF        ; used by Linux for page miss!
+TrOnchip.Set PABORT OFF        ; used by Linux for page miss!
+TrOnchip.Set UNDEF OFF         ; my be used by Linux for FPU detection
+system.memaccess gdbmon		; Use gdb monitor mode
+setup.imaskasm ON
+setup.imaskhll off
+BREAK.SEL.PROGRAM ONCHIP 
+sys.gdblibpath &DEVDIR/fs/fs/lib:&DEVDIR/fs/fs/usr/lib
+
+print "Waiting for the kernel to start from bootloader" 
+sys.mode.attach
+break
+go &KERNELENTRY /onchip
+wait !run()
+
+print "Loading kernel symbols..."
+data.load.elf &KERNELDIR/vmlinux /nocode /gnu
+; Prevent empty structure definitions to confuse the debugger
+symbol.cleanup
+
+; Run over MMU & Interrupt initialization
+Go run_init_process /Onchip
+print "Waiting for initializing target and debugger MMU..."
+wait !run()
+
+; Map the virtual kernel symbols to physical addresses
+; to give the debugger access to it before CPU MMU is
+; initialized
+mmu.format linux swapper_pg_dir 0xc0000000--0xc7ffffff  0x80000000
+;MMU.Create 0xc0000000--0xc7ffffff  0x80000000 ; map kernel pages at RAM start
+MMU.COMMON 0xc0000000--0xffffffff            ; common area for kernel and processes
+mmu.tablewalk on
+MMU.ON
+
+; Load Linux extensions
+print "Loading Linux extensions"
+task.config &T32DIR/t32/demo/arm/kernel/linux/linux.t32
+menu.reprogram &T32DIR/t32/demo/arm/kernel/linux/linux.men
+HELP.FILTER.Add rtoslinux  ; add linux awareness manual to help filter
+
+; Group kernel area to be displayed with red bar
+GROUP.Create "kernel" 0xc0000000--0xffffffff /RED
+
+go
+
+print "Please run t32server on the target and type 'go.monitor'"
+
+ 
+

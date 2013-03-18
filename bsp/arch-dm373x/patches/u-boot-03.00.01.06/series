@@ -1,0 +1,3 @@
+enable_reset_cmd.patch
+uboot_add_env_function.patch
+skip_env_on_sd_boot.patch

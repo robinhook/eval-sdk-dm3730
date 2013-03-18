@@ -1,0 +1,381 @@
+Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispccdc.c
+===================================================================
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispccdc.c	2011-12-22 11:30:50.000000000 -0600
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispccdc.c	2012-07-27 15:54:17.489150459 -0600
+@@ -23,7 +23,6 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  * 02110-1301 USA
+  */
+-
+ #include <linux/module.h>
+ #include <linux/uaccess.h>
+ #include <linux/delay.h>
+@@ -38,6 +37,9 @@
+ #include "ispreg.h"
+ #include "ispccdc.h"
+ 
++#define PAL_NON_ACTIVE 23
++#define NTSC_NON_ACTIVE 20
++
+ static struct v4l2_mbus_framefmt *
+ __ccdc_get_format(struct isp_ccdc_device *ccdc, struct v4l2_subdev_fh *fh,
+ 		  unsigned int pad, enum v4l2_subdev_format_whence which);
+@@ -785,8 +787,6 @@
+ 	struct isp_ccdc_device *ccdc = &isp->isp_ccdc;
+ 	struct v4l2_mbus_framefmt *format;
+ 
+-	isp_reg_set(isp, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_CFG, ISPCCDC_CFG_VDLC);
+-
+ 	/* CCDC_PAD_SINK */
+ 	format = &ccdc->formats[CCDC_PAD_SINK];
+ 
+@@ -888,7 +888,7 @@
+ 		    ISPCCDC_SDOFST_FINV);
+ 
+ 	isp_reg_clr(isp, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_SDOFST,
+-		    ISPCCDC_SDOFST_FOFST_4L);
++		    ISPCCDC_SDOFST_FOFST_1L);
+ 
+ 	switch (oddeven) {
+ 	case EVENEVEN:
+@@ -1208,10 +1208,12 @@
+ 	 * Non BT656: Generate VD0 on the last line of the image and VD1 on the
+ 	 * 2/3 height line.
+ 	 */
+-	if (pdata->is_bt656)
+-		isp_reg_writel(isp,
+-			(format->height/2 - 2) << ISPCCDC_VDINT_0_SHIFT,
+-		       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_VDINT);
++	if (pdata->fldmode)
++		isp_reg_writel(isp, ((format->height / 2) <<
++				     ISPCCDC_VDINT_0_SHIFT |
++				     (format->height / 3) <<
++				     ISPCCDC_VDINT_1_SHIFT),
++			       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_VDINT);
+ 	else
+ 		isp_reg_writel(isp, ((format->height - 2) << ISPCCDC_VDINT_0_SHIFT) |
+ 		       ((format->height * 2 / 3) << ISPCCDC_VDINT_1_SHIFT),
+@@ -1231,11 +1233,23 @@
+ 		       ((format->width - 1) << ISPCCDC_HORZ_INFO_NPH_SHIFT),
+ 		       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_HORZ_INFO);
+ 
+-	isp_reg_writel(isp, 0 << ISPCCDC_VERT_START_SLV0_SHIFT,
+-		       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_VERT_START);
++	if (pdata->is_bt656) {
++		if (format->priv == V4L2_STD_PAL)
++			isp_reg_writel(isp, (PAL_NON_ACTIVE <<
++					     ISPCCDC_VERT_START_SLV0_SHIFT |
++					     PAL_NON_ACTIVE <<
++					     ISPCCDC_VERT_START_SLV1_SHIFT),
++				       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_VERT_START);
++		else if (format->priv == V4L2_STD_NTSC)
++			isp_reg_writel(isp, (NTSC_NON_ACTIVE <<
++					     ISPCCDC_VERT_START_SLV0_SHIFT |
++					     (NTSC_NON_ACTIVE +1 ) <<
++					     ISPCCDC_VERT_START_SLV1_SHIFT),
++				       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_VERT_START);
++	}
+ 
+-	if (pdata->is_bt656)
+-		isp_reg_writel(isp, ((format->height >> 1) - 1)
++	if (pdata->fldmode)
++		isp_reg_writel(isp, (format->height / 2 - 1)
+ 				<< ISPCCDC_VERT_LINES_NLV_SHIFT,
+ 			       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_VERT_LINES);
+ 	else
+@@ -1523,6 +1537,19 @@
+ 	struct isp_device *isp = to_isp_device(ccdc);
+ 	struct isp_buffer *buffer;
+ 	int restart = 0;
++	u32 syn_mode;
++	u32 status = 0;
++
++	if (ccdc->syncif.fldmode) {
++		syn_mode = isp_reg_readl(isp, OMAP3_ISP_IOMEM_CCDC,
++					 ISPCCDC_SYN_MODE);
++		status = syn_mode & ISPCCDC_SYN_MODE_FLDSTAT;
++
++		if (!ccdc->start && !status)
++			goto done;
++		else
++			ccdc->start = 1;
++	}
+ 
+ 	/* The CCDC generates VD0 interrupts even when disabled (the datasheet
+ 	 * doesn't explicitly state if that's supposed to happen or not, so it
+@@ -1543,16 +1570,20 @@
+ 		goto done;
+ 	}
+ 
++
+ 	if (ispccdc_sbl_wait_idle(ccdc, 1000)) {
+ 		dev_info(isp->dev, "CCDC won't become idle!\n");
+ 		goto done;
+ 	}
+ 
+-	buffer = isp_video_buffer_next(&ccdc->video_out, ccdc->error);
+-	if (buffer != NULL) {
+-		ispccdc_set_outaddr(ccdc, buffer->isp_addr);
++	if (!ccdc->syncif.fldmode || (ccdc->syncif.fldmode && !status)) {
++		buffer = isp_video_buffer_next(&ccdc->video_out, ccdc->error);
++		if (buffer != NULL) {
++			ispccdc_set_outaddr(ccdc, buffer->isp_addr);
++			restart = 1;
++		}
++	} else
+ 		restart = 1;
+-	}
+ 
+ 	pipe->state |= ISP_PIPELINE_IDLE_OUTPUT;
+ 
+@@ -1576,30 +1607,10 @@
+ {
+ 	unsigned long flags;
+ 	int restart = 0;
+-	struct isp_device *isp = to_isp_device(ccdc);
+ 
+-	if (ccdc->output & CCDC_OUTPUT_MEMORY) {
+-		if (ccdc->syncif.bt_r656_en) {
+-			u32 fid;
+-			u32 syn_mode = isp_reg_readl(isp, OMAP3_ISP_IOMEM_CCDC,
+-					ISPCCDC_SYN_MODE);
+-
+-			fid = syn_mode & ISPCCDC_SYN_MODE_FLDSTAT;
+-			/* toggle the software maintained fid */
+-			ccdc->syncif.fldstat ^= 1;
+-			if (fid == ccdc->syncif.fldstat) {
+-				if (fid == 0) {
+-					restart = ispccdc_isr_buffer(ccdc);
+-					goto done;
+-				}
+-			} else if (fid == 0) {
+-				ccdc->syncif.fldstat = fid;
+-			}
+-		} else {
++	if (ccdc->output & CCDC_OUTPUT_MEMORY)
+ 			restart = ispccdc_isr_buffer(ccdc);
+-		}
+-	}
+-done:
++
+ 	spin_lock_irqsave(&ccdc->lock, flags);
+ 	if (__ispccdc_handle_stopping(ccdc, CCDC_EVENT_VD0)) {
+ 		spin_unlock_irqrestore(&ccdc->lock, flags);
+@@ -1685,8 +1696,8 @@
+ 	if (ccdc->state == ISP_PIPELINE_STREAM_STOPPED)
+ 		return 0;
+ 
+-	if (!ccdc->syncif.bt_r656_en &&
+-			(events & IRQ0STATUS_CCDC_VD1_IRQ))
++	if ((events & IRQ0STATUS_CCDC_VD1_IRQ) &&
++		!ccdc->syncif.bt_r656_en)
+ 		ispccdc_vd1_isr(ccdc);
+ 
+ 	ispccdc_lsc_isr(ccdc, events);
+@@ -1796,8 +1807,6 @@
+ 			return 0;
+ 
+ 		isp_subclk_enable(isp, OMAP3_ISP_SUBCLK_CCDC);
+-		isp_reg_set(isp, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_CFG,
+-			    ISPCCDC_CFG_VDLC);
+ 
+ 		ccdc_configure(ccdc);
+ 
+@@ -1835,6 +1844,7 @@
+ 			isp_sbl_disable(isp, OMAP3_ISP_SBL_CCDC_WRITE);
+ 		isp_subclk_disable(isp, OMAP3_ISP_SUBCLK_CCDC);
+ 		ccdc->underrun = 0;
++		ccdc->start = 0;
+ 		break;
+ 	}
+ 
+@@ -1920,6 +1930,8 @@
+ 		break;
+ 	}
+ 
++	fmt->code = V4L2_MBUS_FMT_UYVY8_2X8;
++
+ 	/* Data is written to memory unpacked, each 10-bit or 12-bit pixel is
+ 	 * stored on 2 bytes.
+ 	 */
+@@ -2334,6 +2346,8 @@
+ 	INIT_LIST_HEAD(&ccdc->lsc.free_queue);
+ 	spin_lock_init(&ccdc->lsc.req_lock);
+ 
++	ccdc->start = 0;
++
+ 	ccdc->syncif.ccdc_mastermode = 0;
+ 	ccdc->syncif.datapol = 0;
+ 	ccdc->syncif.datsz = 0;
+Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispccdc.h
+===================================================================
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispccdc.h	2011-12-22 11:30:50.000000000 -0600
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispccdc.h	2012-07-27 13:10:02.408835782 -0600
+@@ -204,6 +204,7 @@
+ 	wait_queue_head_t wait;
+ 	unsigned int stopping;
+ 	struct mutex ioctl_lock;
++	int start;
+ };
+ 
+ struct isp_device;
+Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispqueue.c
+===================================================================
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispqueue.c	2011-12-22 11:30:50.000000000 -0600
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispqueue.c	2012-07-27 13:10:02.408835782 -0600
+@@ -362,7 +362,7 @@
+ 	unsigned long this_pfn;
+ 	unsigned long start;
+ 	unsigned long end;
+-	dma_addr_t pa;
++	dma_addr_t pa = 0;
+ 	int ret = -EFAULT;
+ 
+ 	start = buf->vbuf.m.userptr;
+Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispvideo.c
+===================================================================
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispvideo.c	2011-12-22 11:30:50.000000000 -0600
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/isp/ispvideo.c	2012-07-27 13:10:02.408835782 -0600
+@@ -293,21 +293,20 @@
+ void isp_video_pix_to_mbus(const struct v4l2_pix_format *pix,
+ 			   struct v4l2_mbus_framefmt *mbus)
+ {
+-	unsigned int i;
+-
+ 	memset(mbus, 0, sizeof(*mbus));
+ 	mbus->width = pix->width;
+ 	mbus->height = pix->height;
+ 
+-	for (i = 0; i < ARRAY_SIZE(formats); ++i) {
++/*	for (i = 0; i < ARRAY_SIZE(formats); ++i) {
+ 		if (formats[i].pixelformat == pix->pixelformat)
+ 			break;
+ 	}
+ 
+ 	if (WARN_ON(i == ARRAY_SIZE(formats)))
+ 		return;
++*/
+ 
+-	mbus->code = formats[i].code;
++	mbus->code = V4L2_MBUS_FMT_UYVY8_2X8;
+ 	mbus->colorspace = pix->colorspace;
+ 	mbus->field = pix->field;
+ }
+@@ -602,6 +601,25 @@
+ 	return 0;
+ }
+ 
++static int isp_video_enum_fmt_vid_cap(struct file *file, void *fh,
++				      struct v4l2_fmtdesc *fmt)
++{
++
++	if (fmt == NULL || fmt->index)
++		return -EINVAL;
++
++       /* only capture is supported */
++	if (fmt->type != V4L2_BUF_TYPE_VIDEO_CAPTURE)
++		return -EINVAL;
++
++       /* only one format */
++	fmt->flags = 0;
++	strlcpy(fmt->description, "8-bit UYVY 4:2:2 Format",
++		sizeof(fmt->description));
++	fmt->pixelformat = V4L2_PIX_FMT_UYVY;
++	return 0;
++}
++
+ static int
+ isp_video_get_format(struct file *file, void *fh, struct v4l2_format *format)
+ {
+@@ -647,22 +665,42 @@
+ {
+ 	struct isp_video *video = video_drvdata(file);
+ 	struct v4l2_subdev_format fmt;
+-	struct v4l2_subdev *subdev;
+-	u32 pad;
++	struct v4l2_subdev *sink_subdev;
++	struct v4l2_subdev *source_subdev;
++	struct media_pad *source_pad;
++	struct media_pad *sink_pad;
++	u32 pad = 0;
+ 	int ret;
+ 
+ 	if (format->type != video->type)
+ 		return -EINVAL;
+ 
+-	subdev = isp_video_remote_subdev(video, &pad);
+-	if (subdev == NULL)
++	sink_subdev = isp_video_remote_subdev(video, NULL);
++
++	if (sink_subdev == NULL)
++		return -EINVAL;
++
++	sink_pad = &sink_subdev->entity.pads[0];
++
++	mutex_lock(&video->mutex);
++
++	source_pad = media_entity_remote_source(sink_pad);
++	if (source_pad == NULL || media_entity_type(source_pad->entity)
++	    != MEDIA_ENTITY_TYPE_V4L2_SUBDEV)
+ 		return -EINVAL;
+ 
+-	isp_video_pix_to_mbus(&format->fmt.pix, &fmt.format);
++	source_subdev = media_entity_to_v4l2_subdev(source_pad->entity);
++	if (source_subdev == NULL)
++		return -EINVAL;
+ 
+ 	fmt.pad = pad;
+ 	fmt.which = V4L2_SUBDEV_FORMAT_ACTIVE;
+-	ret = v4l2_subdev_call(subdev, pad, get_fmt, NULL, &fmt);
++
++	ret = v4l2_subdev_call(source_subdev, pad, get_fmt, NULL, &fmt);
++	ret = v4l2_subdev_call(sink_subdev, pad, set_fmt, NULL, &fmt);
++
++	mutex_unlock(&video->mutex);
++
+ 	if (ret)
+ 		return ret == -ENOIOCTLCMD ? -EINVAL : ret;
+ 
+@@ -955,6 +993,14 @@
+ 		omap_pm_set_min_bus_tput(video->isp->dev,
+ 					 OCP_INITIATOR_AGENT, 0);
+ 		media_entity_pipeline_stop(&video->video.entity);
++		/* The DMA queue must be emptied here, otherwise CCDC interrupts
++		 * that will get triggered the next time the CCDC is powered up
++		 * will try to access buffers that might have been freed but
++		 * still present in the DMA queue. This can easily get triggered
++		 * if the above omap3isp_pipeline_set_stream() call fails on a
++		 * system with a free-running sensor.
++		 */
++		INIT_LIST_HEAD(&video->dmaqueue);
+ 		video->queue = NULL;
+ 	}
+ 
+@@ -1152,6 +1198,7 @@
+ 	.vidioc_enum_input		= isp_video_enum_input,
+ 	.vidioc_g_input			= isp_video_g_input,
+ 	.vidioc_s_input			= isp_video_s_input,
++	.vidioc_enum_fmt_vid_cap        = isp_video_enum_fmt_vid_cap,
+ 	.vidioc_querystd		= isp_video_querystd,
+ 	.vidioc_g_std			= isp_video_g_std,
+ 	.vidioc_s_std			= isp_video_s_std,
+Index: kernel/linux-2.6.37-psp04.02.00.07/include/linux/v4l2-mediabus.h
+===================================================================
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/include/linux/v4l2-mediabus.h	2011-12-22 11:30:54.000000000 -0600
++++ kernel/linux-2.6.37-psp04.02.00.07/include/linux/v4l2-mediabus.h	2012-07-27 13:10:02.408835782 -0600
+@@ -95,6 +95,7 @@
+  * @code:	data format code (from enum v4l2_mbus_pixelcode)
+  * @field:	used interlacing type (from enum v4l2_field)
+  * @colorspace:	colorspace of the data (from enum v4l2_colorspace)
++ * @priv:	Reserved for custom (driver defined) additional info
+  */
+ struct v4l2_mbus_framefmt {
+ 	__u32			width;
+@@ -102,6 +103,7 @@
+ 	__u32			code;
+ 	__u32			field;
+ 	__u32			colorspace;
++	__u32                   priv;
+ };
+ 
+ #endif

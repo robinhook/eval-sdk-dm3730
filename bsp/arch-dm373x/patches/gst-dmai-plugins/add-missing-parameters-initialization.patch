@@ -1,0 +1,29 @@
+Index: gst-dmai-plugins/src/src/gsttividenc1.c
+===================================================================
+--- gst-dmai-plugins.orig/src/src/gsttividenc1.c	2013-01-07 13:11:50.698362428 -0600
++++ gst-dmai-plugins/src/src/gsttividenc1.c	2013-01-07 15:04:53.990388466 -0600
+@@ -252,12 +252,23 @@
+ 
+     params->maxWidth = dynParams->inputWidth = dmaienc->width;
+     params->maxHeight = dynParams->inputHeight = dmaienc->height;
+-#if PLATFORM != dm365
++#if PLATFORM != dm365 && PLATFORM != dm37x
+     /* Looks like the some current codecs (i.e. DM365 h264) get mad about
+        setting this parameters */
+     dynParams->refFrameRate = dynParams->targetFrameRate = 
+         (dmaienc->framerateNum * 1000) / dmaienc->framerateDen;
+ #endif
++
++#if PLATFORM == dm37x
++    /*
++     * Besides the default parameters, it has been observed that these
++     * parameters must be set in order to correctly initialize the
++     * codec
++     */
++    params->rateControlPreset = IVIDEO_STORAGE;
++    params->maxInterFrameInterval = 1;
++#endif
++
+     if (dmaienc->pitch) {
+         dynParams->captureWidth = dmaienc->pitch;
+     }

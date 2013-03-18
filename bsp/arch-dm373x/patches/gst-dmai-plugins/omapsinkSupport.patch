@@ -1,0 +1,765 @@
+Index: gst-dmai-plugins/src/src/omapsink.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ gst-dmai-plugins/src/src/omapsink.c	2012-04-16 11:06:26.550834493 -0600
+@@ -0,0 +1,636 @@
++/*
++ * Copyright (C) 2009 RidgeRun
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation
++ * version 2.1 of the License.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
++ */
++
++#include <fcntl.h>
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++#include <sys/time.h>
++#include <unistd.h>
++#include <string.h>
++
++#include <ti/sdo/dmai/BufferGfx.h>
++#include "omapsink.h"
++#include "gsttidmaibuffertransport.h"
++
++static GstVideoSinkClass *parent_class;
++
++GST_DEBUG_CATEGORY (omapsink_debug);
++#define GST_CAT_DEFAULT omapsink_debug
++
++enum
++{
++  PROP_0,
++  PROP_AUTOCENTER,
++  PROP_AUTOSCALE,
++  PROP_SCREENWIDTH,
++  PROP_SCREENHEIGHT,
++  PROP_X,
++  PROP_Y,
++  PROP_OVERLAYWIDTH,
++  PROP_OVERLAYHEIGHT,
++  PROP_ROTATION,
++};
++
++static gboolean
++set_video_dimensions (GstOmapSink *self);
++
++static gboolean
++rotate_video (GstOmapSink *self);
++
++static void set_property(GObject * object, guint prop_id,
++                const GValue * value, GParamSpec * pspec)
++{
++    GstOmapSink *self;
++
++    self = GST_OMAP_SINK(object);
++
++    switch (prop_id) {
++        case PROP_AUTOCENTER:
++            self->autocenter = g_value_get_boolean(value);
++            set_video_dimensions(self);
++            break;
++        case PROP_AUTOSCALE:
++            self->autoscale = g_value_get_boolean(value);
++            set_video_dimensions(self);
++            break;
++        case PROP_SCREENWIDTH:
++            self->screenWidth = g_value_get_int(value);
++            set_video_dimensions(self);
++            break;
++        case PROP_SCREENHEIGHT:
++            self->screenHeight = g_value_get_int(value);
++            set_video_dimensions(self);
++            break;
++        case PROP_X:
++            self->x = g_value_get_int(value);
++            set_video_dimensions(self);
++            break;
++        case PROP_Y:
++            self->y = g_value_get_int(value);
++            set_video_dimensions(self);
++            break;
++        case PROP_OVERLAYWIDTH:
++            self->overlayWidth = g_value_get_int(value);
++            set_video_dimensions(self);
++            break;
++        case PROP_OVERLAYHEIGHT:
++            self->overlayHeight = g_value_get_int(value);
++            set_video_dimensions(self);
++            break;
++        case PROP_ROTATION:
++            self->rotation = g_value_get_int(value);
++            rotate_video(self);
++            break;
++        default:
++            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
++            break;
++    }
++}
++
++
++static void get_property(GObject * object, guint prop_id,
++                GValue * value, GParamSpec * pspec)
++{
++    GstOmapSink *self;
++
++    self = GST_OMAP_SINK(object);
++
++    switch (prop_id) {
++        case PROP_AUTOCENTER:
++            g_value_set_boolean(value, self->autocenter);
++            break;
++        case PROP_AUTOSCALE:
++            g_value_set_boolean(value, self->autoscale);
++            break;
++        case PROP_SCREENWIDTH:
++            g_value_set_int(value, self->screenWidth);
++            break;
++        case PROP_SCREENHEIGHT:
++            g_value_set_int(value, self->screenHeight);
++            break;
++        case PROP_X:
++            g_value_set_int(value, self->x);
++            break;
++        case PROP_Y:
++            g_value_set_int(value, self->y);
++            break;
++        case PROP_OVERLAYWIDTH:
++            g_value_set_int(value, self->overlayWidth);
++            break;
++        case PROP_OVERLAYHEIGHT:
++            g_value_set_int(value, self->overlayHeight);
++            break;
++        case PROP_ROTATION:
++            g_value_set_int(value, self->rotation);
++            break;
++        default:
++            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
++            break;
++    }
++}
++
++static gboolean
++set_video_dimensions (GstOmapSink *self)
++{
++    struct v4l2_format fmt;
++	GST_DEBUG_OBJECT(self,"Entry");
++
++    if (self->fd == -1)
++        return FALSE;
++
++    if (self->autocenter && !self->autoscale){
++        self->x = (self->screenWidth - self->displayWidth) / 2;
++        self->y = (self->screenHeight - self->height) / 2;
++    }
++
++    memset(&fmt,0,sizeof(fmt));
++    fmt.fmt.win.w.left = self->x;
++    fmt.fmt.win.w.top = self->y;
++    fmt.fmt.win.w.width = self->overlayWidth;
++    fmt.fmt.win.w.height = self->overlayHeight;
++    fmt.type =V4L2_BUF_TYPE_VIDEO_OVERLAY;
++
++    if (ioctl(self->fd, VIDIOC_S_FMT, &fmt) == -1) {
++        GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++            ("Could not set format"));
++	return FALSE;
++    }
++
++	GST_DEBUG_OBJECT(self,"Leave");
++    return TRUE;
++}
++
++static gboolean
++rotate_video (GstOmapSink *self)
++{
++    struct v4l2_control control;
++
++	GST_DEBUG_OBJECT(self,"Entry");
++    if (self->fd == -1)
++        return FALSE;
++
++    control.id = V4L2_CID_ROTATE;
++    control.value = self->rotation;
++
++    if (ioctl(self->fd, VIDIOC_S_CTRL, &control) == -1) {
++        GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++            ("Could not set rotation"));
++        return FALSE;
++    }
++
++	GST_DEBUG_OBJECT(self,"Leave");
++    return TRUE;
++}
++
++static gboolean configure_video (GstBaseSink *bsink)
++{
++    GstOmapSink *self;
++    struct v4l2_format fmt;
++    struct v4l2_crop crop;
++    struct v4l2_requestbuffers req;
++    int fd;
++
++    self = GST_OMAP_SINK (bsink);
++	GST_DEBUG_OBJECT(self,"Entry");
++
++    fd = self->fd;
++    g_assert(fd != -1);
++
++    if (!rotate_video(self))
++	return FALSE;
++
++    GST_DEBUG("Configuring video with %dx%d, overlay is %dx%d @ %d:%d",
++	self->width,self->height,
++	self->overlayWidth,self->overlayHeight,
++	self->x,self->y);
++
++    memset(&fmt,0,sizeof(fmt));
++    fmt.fmt.pix.width = self->width;
++    fmt.fmt.pix.height = self->height;
++    fmt.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
++    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_UYVY;
++
++    if (ioctl(fd, VIDIOC_S_FMT, &fmt) == -1) {
++        GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++            ("Could not set format"));
++	return FALSE;
++    }
++
++    fmt.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
++    if (ioctl(fd, VIDIOC_G_FMT, &fmt) == -1) {
++        GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++            ("Could not get format"));
++        return FALSE;
++    }
++
++    GST_INFO("Video output set to size %dx%d pitch %d\n",
++	     fmt.fmt.pix.width, fmt.fmt.pix.height, fmt.fmt.pix.bytesperline);
++
++    memset (&crop, 0, sizeof (crop));
++    crop.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
++    crop.c.left = 0;
++    crop.c.top = 0;
++    crop.c.width = self->width;
++    crop.c.height = self->height;
++
++    if (ioctl (fd, VIDIOC_S_CROP, &crop) == -1){
++        GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++            ("Failed to set cropping"));
++	return FALSE;
++    }
++
++    if (self->overlayWidth != 0 || self->overlayHeight != 0 ||
++		self->y != 0 || self->x != 0) {
++		if (!set_video_dimensions(self))
++		    return FALSE;
++    }
++
++    /* Request USER PTR I/O */
++    memset(&req,0,sizeof(req));
++    req.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
++    req.memory = V4L2_MEMORY_USERPTR;
++    /* Usually USER I/O doesn't require the setup the number of buffers,
++       however if we are using rotation, we need to allow the driver to pre-allocated
++       the buffers
++     */
++    req.count = RESERVED_BUFFERS;
++
++    if (ioctl(fd, VIDIOC_REQBUFS, &req) == -1) {
++        GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++            ("Failed to request buffers"));
++        return FALSE;
++    }
++    GST_DEBUG_OBJECT(self,"Allocated %d buffers",req.count);
++
++    /* Reset the pool of buffers */
++    memset(self->pool,0,sizeof(self->pool));
++
++    GST_DEBUG_OBJECT(self,"Leave");
++    return TRUE;
++}
++
++
++static gboolean
++setcaps (GstBaseSink *bsink,
++         GstCaps *vscapslist)
++{
++    GstOmapSink *self;
++    GstStructure *structure;
++    gint width, height;
++    float parFactor;
++
++    self = GST_OMAP_SINK (bsink);
++	GST_DEBUG_OBJECT(self,"Entry");
++
++    structure = gst_caps_get_structure (vscapslist, 0);
++
++    gst_structure_get_int (structure, "width", &width);
++    gst_structure_get_int (structure, "height", &height);
++    if (!gst_structure_get_fraction (structure, "pixel-aspect-ratio",
++            &self->parN,&self->parD)) {
++        self->parD = 1;
++        self->parN = 1;
++    }
++    parFactor = (float)self->parN / (float)self->parD;
++    self->displayWidth = (float) width * parFactor;
++
++    self->width = width;
++    self->height = height;
++    self->screenWidth = self->screenWidth? self->screenWidth : self->displayWidth;
++    self->screenHeight = self->screenHeight? self->screenHeight : self->height;
++
++    if (self->screenWidth != self->displayWidth &&
++        self->screenHeight != self->height &&
++        self->autoscale) {
++        float f1 = (float)self->displayWidth/(float)self->height;
++        float f2 = (float)self->screenWidth/(float)self->screenHeight;
++        if (f1 >= f2) {
++            self->overlayWidth = self->screenWidth;
++            self->overlayHeight = self->height * self->screenWidth /  self->displayWidth;
++            self->x = 0;
++            self->y = (self->screenHeight - self->overlayHeight) / 2;
++        } else {
++            self->overlayHeight = self->screenHeight;
++            self->overlayWidth = self->displayWidth * self->screenHeight /  self->height;
++            self->y = 0;
++            self->x = (self->screenWidth - self->overlayWidth) / 2;
++        }
++    } else {
++        if (self->overlayWidth == 0)
++            self->overlayWidth = self->displayWidth;
++
++        if (self->overlayHeight == 0)
++            self->overlayHeight = self->height;
++    }
++
++    GST_DEBUG_OBJECT(self,"Leave");
++    return TRUE;
++}
++
++static gboolean
++start (GstBaseSink *bsink)
++{
++    GstOmapSink *self;
++    int fd;
++
++    self = GST_OMAP_SINK (bsink);
++
++    GST_DEBUG_OBJECT(self,"Entry");
++    fd = open ("/dev/video7", O_RDWR, 0);
++
++    if (fd == -1)
++    {
++        GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++            ("Could not open video device"));
++        return FALSE;
++    }
++
++    self->fd = fd;
++
++    GST_DEBUG_OBJECT(self,"Leave");
++    return TRUE;
++}
++
++static gboolean
++stop (GstBaseSink *bsink)
++{
++    GstOmapSink *self = GST_OMAP_SINK (bsink);
++    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
++    gboolean ret = TRUE;
++
++    GST_DEBUG_OBJECT(self,"Entry");
++    g_assert(self->fd != -1);
++
++    GST_INFO("Releasing video buffers");
++
++    if (ioctl(self->fd, VIDIOC_STREAMOFF, &type) == -1) {
++        GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++            ("Failed to stream off"));
++    }
++    self->liveBuffers = 0;
++    self->idx = 0;
++
++    close(self->fd);
++    self->fd = 0;
++
++    GST_DEBUG_OBJECT(self,"Leave");
++    return ret;
++}
++
++static GstFlowReturn
++render (GstBaseSink *bsink, GstBuffer *buffer)
++{
++    GstOmapSink *self = GST_OMAP_SINK (bsink);
++    struct v4l2_buffer v4l2buf;
++    Buffer_Handle hDstBuf = NULL;
++
++    GST_DEBUG_OBJECT(self,"Entry");
++
++    if (GST_IS_TIDMAIBUFFERTRANSPORT(buffer)){
++        hDstBuf = GST_TIDMAIBUFFERTRANSPORT_DMAIBUF(buffer);
++    } else {
++        GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++            ("Failed to get free buffer for render"));
++        GST_DEBUG_OBJECT(self,"Leave");
++        return GST_FLOW_ERROR;
++    }
++
++    if (!self->streaming && !self->liveBuffers){
++        configure_video(bsink);
++    }
++
++    if (Buffer_getId(hDstBuf) >= MAX_NBUFFERS){
++        GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++            ("Buffer ID is bigger than the number of slots allocated"));
++        GST_DEBUG_OBJECT(self,"Leave");
++        return GST_FLOW_ERROR;
++    }
++
++    if (self->pool[Buffer_getId(hDstBuf)] == buffer) {        /* We already render this buffer, skip it */
++        GST_DEBUG_OBJECT(self,"Skipping pre-rolled buffer");
++        return GST_FLOW_OK;
++    }
++
++    v4l2buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
++    v4l2buf.memory = V4L2_MEMORY_USERPTR;
++    v4l2buf.index = self->idx++ % RESERVED_BUFFERS;
++    v4l2buf.m.userptr = (int)GST_BUFFER_DATA(buffer);
++    v4l2buf.length = (int)GST_BUFFER_SIZE(buffer);
++    v4l2buf.bytesused = v4l2buf.length;
++    v4l2buf.timestamp.tv_sec = 0;
++    v4l2buf.timestamp.tv_usec = 0;
++    v4l2buf.field = V4L2_FIELD_ANY;
++    v4l2buf.flags = 0;
++    self->liveBuffers++;
++
++#if 0
++    printf("Buffer render info:\n");
++    printf("Buffer:\t%p\n",buffer);
++    printf("Data:\t0x%x\n",(int)v4l2buf.m.userptr);
++    printf("Length:\t%d\n", v4l2buf.length);
++    printf("Index:\t%d\n", v4l2buf.index);
++    printf("ID:\t%d\n", Buffer_getId(hDstBuf));
++#endif
++
++    gst_buffer_ref(buffer);
++    self->pool[v4l2buf.index] = buffer;
++
++    if (ioctl(self->fd,VIDIOC_QBUF,&v4l2buf) == -1) {
++        GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++            ("Failed to render buffer"));
++        return GST_FLOW_ERROR;
++    }
++    GST_LOG("Buffer rendered with ID %d and index %d",
++        Buffer_getId(hDstBuf),v4l2buf.index);
++
++    if (!self->streaming){
++        enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
++        if (ioctl(self->fd, VIDIOC_STREAMON, &type) == -1) {
++            GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++                ("Failed to start streaming"));
++            return GST_FLOW_ERROR;
++        }
++        self->streaming = TRUE;
++        GST_DEBUG_OBJECT(self,"Streaming enabled");
++    }
++
++    if (self->liveBuffers > 1) {
++        if(ioctl(self->fd, VIDIOC_DQBUF, &v4l2buf) < 0) {
++            GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++                ("Failed to get free buffer for render"));
++            return GST_FLOW_ERROR;
++        }
++
++        if ((int)GST_BUFFER_DATA(self->pool[v4l2buf.index]) !=
++            (int)v4l2buf.m.userptr) {
++            GST_ELEMENT_ERROR(self,STREAM,FAILED,(NULL),
++                ("Corrupted memory pointer received for release from the driver"));
++            GST_DEBUG_OBJECT(self,"Leave");
++            return GST_FLOW_ERROR;
++        }
++        GST_DEBUG_OBJECT(self,"Releasing buffer from queue, index %d",v4l2buf.index);
++        gst_buffer_unref(self->pool[v4l2buf.index]);
++        self->pool[v4l2buf.index] = NULL;
++
++        self->liveBuffers--;
++    }
++
++    GST_DEBUG_OBJECT(self,"Leave");
++    return GST_FLOW_OK;
++}
++
++static void
++type_instance_init (GTypeInstance * instance,
++                	gpointer g_class){
++    GstOmapSink *self = (GstOmapSink *)instance;
++    GST_DEBUG("Omap Sink instance initiated");
++    self->fd = -1;
++    self->width = 0;
++    self->height = 0;
++    self->displayWidth = 0;
++    self->screenWidth = 0;
++    self->screenHeight = 0;
++    self->x = 0;
++    self->y = 0;
++    self->rotation = 0;
++    self->streaming = FALSE;
++    self->liveBuffers = 0;
++    self->idx = 0;
++    gst_base_sink_set_max_lateness(GST_BASE_SINK(self),
++        20000000);
++}
++
++static void
++type_class_init (gpointer g_class,
++                 gpointer class_data)
++{
++    GObjectClass     *gobject_class;
++    GstBaseSinkClass *base_sink_class;
++
++    gobject_class   = (GObjectClass *) g_class ;
++    base_sink_class = (GstBaseSinkClass *) g_class;
++
++    parent_class = g_type_class_ref (GST_OMAP_SINK_TYPE);
++
++    gobject_class->set_property = GST_DEBUG_FUNCPTR
++	(set_property);
++    gobject_class->get_property = GST_DEBUG_FUNCPTR
++	(get_property);
++
++    g_object_class_install_property(gobject_class, PROP_AUTOCENTER,
++	g_param_spec_boolean("autocenter", "autocenter",
++	    "Center the video on the screen (requires screenWidth and screenHeight)",
++	    FALSE, G_PARAM_READWRITE));
++
++    g_object_class_install_property(gobject_class, PROP_AUTOSCALE,
++	g_param_spec_boolean("autoscale", "autoscale",
++	    "Scale the video to fill the screen (requires screenWidth and screenHeight)",
++	    FALSE, G_PARAM_READWRITE));
++
++    g_object_class_install_property(gobject_class, PROP_SCREENWIDTH,
++	g_param_spec_int("screenWidth", "screenWidth",
++	    "Hint the width of the screen for the auto centering (0 for disabled)",
++	    0, G_MAXINT, 0, G_PARAM_READWRITE));
++
++    g_object_class_install_property(gobject_class, PROP_SCREENHEIGHT,
++	g_param_spec_int("screenHeight", "screenHeight",
++	    "Hint the height of the screen for the auto centering (0 for disabled)",
++	    0, G_MAXINT, 0, G_PARAM_READWRITE));
++
++    g_object_class_install_property(gobject_class, PROP_X,
++	g_param_spec_int("x", "x",
++	    "Horizontal position of corner of the overlay screen",
++	    -1, G_MAXINT, -1, G_PARAM_READWRITE));
++
++    g_object_class_install_property(gobject_class, PROP_Y,
++	g_param_spec_int("y", "y",
++	    "Vertical position of the corner of the overlay screen",
++	    -1, G_MAXINT, -1, G_PARAM_READWRITE));
++
++    g_object_class_install_property(gobject_class, PROP_OVERLAYWIDTH,
++	g_param_spec_int("overlayWidth", "Overlay Width",
++	    "Width of the overlay screen",
++	    -1, G_MAXINT, -1, G_PARAM_READWRITE));
++
++    g_object_class_install_property(gobject_class, PROP_OVERLAYHEIGHT,
++	g_param_spec_int("overlayHeight", "Overlay Height",
++	    "Height of the overlay screen",
++	    -1, G_MAXINT, -1, G_PARAM_READWRITE));
++
++    g_object_class_install_property(gobject_class, PROP_ROTATION,
++	g_param_spec_int("rotation", "Rotation angle", "Rotation angle ",
++	    -1, G_MAXINT, 90, G_PARAM_READWRITE));
++
++    base_sink_class->set_caps = GST_DEBUG_FUNCPTR (setcaps);
++    base_sink_class->start = GST_DEBUG_FUNCPTR (start);
++    base_sink_class->stop = GST_DEBUG_FUNCPTR (stop);
++    base_sink_class->render = GST_DEBUG_FUNCPTR (render);
++    base_sink_class->preroll = GST_DEBUG_FUNCPTR (render);
++}
++
++static void
++type_base_init (gpointer g_class)
++{
++    GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
++    GstElementDetails details;
++    GstPadTemplate *template;
++
++    GST_DEBUG_CATEGORY_INIT (omapsink_debug, "omapsink", 0, "omapsink");
++	details.longname = "Omap Video Sink";
++	details.klass = "Sink/Video";
++	details.description = "Renders video on Omap device";
++	details.author = "Diego Dompe";
++
++	gst_element_class_set_details (element_class, &details);
++
++	template = gst_pad_template_new ("sink", GST_PAD_SINK,
++									 GST_PAD_ALWAYS,
++						   gst_caps_new_simple("video/x-raw-yuv",
++						   "width", GST_TYPE_INT_RANGE, 16, 1920,
++						   "height", GST_TYPE_INT_RANGE, 16, 1080,
++						   "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 2147483647, 1,
++						   "format",GST_TYPE_FOURCC,GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'),
++						   NULL));
++
++	gst_element_class_add_pad_template (element_class, template);
++}
++
++GType
++gst_omapsink_get_type (void)
++{
++    static GType type = 0;
++
++    if (G_UNLIKELY (type == 0))
++    {
++        GTypeInfo *type_info;
++
++        type_info = g_new0 (GTypeInfo, 1);
++        type_info->class_size = sizeof (GstOmapSinkClass);
++        type_info->base_init = type_base_init;
++        type_info->class_init = type_class_init;
++        type_info->instance_size = sizeof (GstOmapSink);
++        type_info->instance_init = type_instance_init;
++
++        type = g_type_register_static (GST_TYPE_BASE_SINK, "GstOmapSink", type_info, 0);
++
++        g_free (type_info);
++    }
++
++    return type;
++}
++
+Index: gst-dmai-plugins/src/src/omapsink.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ gst-dmai-plugins/src/src/omapsink.h	2012-04-16 10:51:03.222843008 -0600
+@@ -0,0 +1,72 @@
++/*
++ * Copyright (C) 2009 RidgeRun
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation
++ * version 2.1 of the License.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
++ */
++
++#ifndef GST_OMAPSINK_H
++#define GST_OMAPSINK_H
++
++#include <linux/videodev.h>
++
++#include <gst/gst.h>
++#include <gst/video/gstvideosink.h>
++#include <gst/video/video.h>
++
++G_BEGIN_DECLS
++
++#define GST_OMAP_SINK_TYPE (gst_omapsink_get_type ())
++#define GST_OMAP_SINK(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_OMAP_SINK_TYPE, GstOmapSink))
++#define MAX_NBUFFERS 5
++#define RESERVED_BUFFERS 5
++
++typedef struct GstOmapSink GstOmapSink;
++typedef struct GstOmapSinkClass GstOmapSinkClass;
++
++struct GstOmapSink
++{
++    GstVideoSink videosink;
++
++    int fd;
++    int width;
++    int height;
++    int displayWidth;
++    int overlayWidth;
++    int overlayHeight;
++    int x;
++    int y;
++    int screenWidth;
++    int screenHeight;
++    gboolean autocenter;
++    gboolean autoscale;
++    int parN;
++    int parD;
++    int rotation;
++    gboolean streaming;
++    int liveBuffers;
++    int idx;
++    GstBuffer *pool[MAX_NBUFFERS];
++};
++
++struct GstOmapSinkClass
++{
++    GstBaseSinkClass parent_class;
++};
++
++GType gst_omapsink_get_type (void);
++
++G_END_DECLS
++
++#endif /* GST_OMAPVIDEO_H */
+Index: gst-dmai-plugins/src/src/Makefile.am
+===================================================================
+--- gst-dmai-plugins.orig/src/src/Makefile.am	2012-04-16 10:51:00.054857700 -0600
++++ gst-dmai-plugins/src/src/Makefile.am	2012-04-16 10:51:03.222843008 -0600
+@@ -10,7 +10,7 @@
+ gsttiauddec1.c gsttiauddec.c gsttiaudenc1.c gsttiaudenc.c gsttiimgenc1.c gsttiimgenc.c \
+ gsttiimgdec.c gsttiimgdec1.c \
+ gsttisupport_aac.c gsttisupport_mp3.c gsttisupport_wma.c gsttidmaiperf.c\
+-gstticommonutils.c ti_encoders.c ti_decoders.c ittiam_encoders.c ittiam_caps.c caps.c
++gstticommonutils.c ti_encoders.c ti_decoders.c ittiam_encoders.c ittiam_caps.c caps.c omapsink.c
+ 
+ # flags used to compile this plugin
+ # add other _CFLAGS and _LIBS as needed
+@@ -28,7 +28,7 @@
+ gsttiparsers.h gsttisupport_generic.h gsttisupport_h264.h gsttisupport_mpeg2.h \
+ gsttisupport_mpeg4.h gsttisupport_aac.h gsttisupport_mp3.h \
+ gsttisupport_wma.h gsttisupport_jpeg.h ti_encoders.h ti_decoders.h caps.h gsttidmaidec.h \
+-gsttidmaienc.h gsttidmaiaccel.h gsttipriority.h ittiam_encoders.h ittiam_caps.h
++gsttidmaienc.h gsttidmaiaccel.h gsttipriority.h ittiam_encoders.h ittiam_caps.h omapsink.h
+ 
+ # XDC Configuration
+ CONFIGURO     = $(XDC_INSTALL_DIR)/xs xdc.tools.configuro
+Index: gst-dmai-plugins/src/src/gstticodecplugin.c
+===================================================================
+--- gst-dmai-plugins.orig/src/src/gstticodecplugin.c	2012-04-16 10:51:03.207165931 -0600
++++ gst-dmai-plugins/src/src/gstticodecplugin.c	2012-04-16 10:51:03.222843008 -0600
+@@ -59,6 +59,7 @@
+ #include "ti_decoders.h"
+ #include "ittiam_encoders.h"
+ #include "caps.h"
++#include "omapsink.h"
+ 
+ extern struct gstti_decoder_ops gstti_viddec_ops;
+ extern struct gstti_decoder_ops gstti_viddec2_ops;
+@@ -478,6 +479,12 @@
+         GST_RANK_PRIMARY,GST_TYPE_DMAI_RESIZER))
+         return FALSE;
+ 
++    if (!gst_element_register(TICodecPlugin, "omapsink",
++        GST_RANK_PRIMARY,GST_OMAP_SINK_TYPE))
++        return FALSE;
++
++
++
+     return TRUE;
+ }
+ 

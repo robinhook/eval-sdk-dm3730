@@ -1,0 +1,15 @@
+Index: u-boot-20110621c/src/include/configs/omap3_beagle.h
+===================================================================
+--- u-boot-20110621c.orig/src/include/configs/omap3_beagle.h	2012-03-16 11:18:09.728700973 -0600
++++ u-boot-20110621c/src/include/configs/omap3_beagle.h	2012-03-16 11:53:13.799325980 -0600
+@@ -257,8 +257,8 @@
+ 		"root=${ramroot} " \
+ 		"rootfstype=${ramrootfstype}\0" \
+ 	"loadramdisk=fatload mmc ${mmcdev} ${rdaddr} ramdisk.gz\0" \
+-	"loaduimagefat=fatload mmc ${mmcdev} ${loadaddr} uImage\0" \
+-	"loaduimage=ext2load mmc ${mmcdev}:2 ${loadaddr} /boot/uImage\0" \
++	"loaduimage=fatload mmc ${mmcdev} ${loadaddr} uImage\0" \
++	"loaduimageext2=ext2load mmc ${mmcdev}:2 ${loadaddr} /boot/uImage\0" \
+ 	"mmcboot=echo Booting from mmc ...; " \
+ 		"run mmcargs; " \
+ 		"bootm ${loadaddr}\0" \

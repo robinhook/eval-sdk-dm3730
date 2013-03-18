@@ -1,0 +1,468 @@
+Index: dvsdk-4_02_00_06/dvsdk/c6accel_1_01_00_02/soc/app/Makefile
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/c6accel_1_01_00_06/soc/app/Makefile	2011-01-28 10:45:15.234262824 -0600
++++ dvsdk-4_02_00_06/dvsdk/c6accel_1_01_00_06/soc/app/Makefile	2011-01-28 10:45:47.413424493 -0600
+@@ -18,7 +18,7 @@
+ include $(ROOTDIR)/Rules.make
+ 
+ # Comment this out if you want to see full compiler and linker output.
+-VERBOSE = @
++V = @
+ 
+ # Which compiler flags should be used?
+ BUILD_TYPE=release
+@@ -75,8 +75,8 @@
+ LD_FLAGS += -L$(LINUXLIBS_INSTALL_DIR)/lib -lm -lpthread
+ C6ACCEL_LIB += ../c6accelw/lib/c6accelw_$(PLATFORM).a470MV
+ 
+-COMPILE.c = $(VERBOSE) $(CSTOOL_PREFIX)gcc $(CPP_FLAGS) $(C_FLAGS) $(CPP_FLAGS) -c
+-LINK.c = $(VERBOSE) $(CSTOOL_PREFIX)gcc $(LD_FLAGS)
++COMPILE.c = $(V) $(CSTOOL_PREFIX)gcc $(CPP_FLAGS) $(C_FLAGS) $(CPP_FLAGS) -c
++LINK.c = $(V) $(CSTOOL_PREFIX)gcc $(LD_FLAGS)
+ 
+ SOURCES = $(wildcard *.c)
+ HEADERS = $(wildcard *.h)
+@@ -108,8 +108,8 @@
+ 	@echo ======== Building $(TARGET) ========
+ 	@echo Configuring application using $<
+ 	@echo
+-	$(VERBOSE) $(CONFIGURO) -o $(XDC_CFG) -t $(XDC_TARGET) -p $(PLATFORM_XDC) -b $(CONFIG_BLD) $(XDC_CFGFILE)
++	$(V) $(CONFIGURO) -o $(XDC_CFG) -t $(XDC_TARGET) -p $(PLATFORM_XDC) -b $(CONFIG_BLD) $(XDC_CFGFILE)
+ 
+ clean:
+ 	@echo Removing generated files..
+-	$(VERBOSE) -$(RM) -rf $(XDC_CFG) $(OBJFILES) $(TARGET) *~ *.d .dep
++	$(V) -$(RM) -rf $(XDC_CFG) $(OBJFILES) $(TARGET) *~ *.d .dep
+Index: dvsdk-4_02_00_06/dvsdk/c6accel_1_01_00_02/soc/c6accelw/Makefile
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/c6accel_1_01_00_06/soc/c6accelw/Makefile	2011-01-28 10:39:51.485255141 -0600
++++ dvsdk-4_02_00_06/dvsdk/c6accel_1_01_00_06/soc/c6accelw/Makefile	2011-01-28 10:41:46.405449729 -0600
+@@ -13,7 +13,7 @@
+ include $(ROOTDIR)/Rules.make
+ 
+ # Comment this out if you want to see full compiler and linker output.
+-VERBOSE = @
++V = @
+ 
+ # Which compiler flags should be used?
+ BUILD_TYPE=release
+@@ -36,9 +36,9 @@
+ LD_FLAGS += -L$(LINUXLIBS_INSTALL_DIR)/lib
+ AR_FLAGS += 
+ 
+-COMPILE.c = $(VERBOSE) $(CSTOOL_PREFIX)gcc $(CPP_FLAGS) $(C_FLAGS) -c
+-LINK.c = $(VERBOSE) $(CSTOOL_PREFIX)gcc $(LD_FLAGS)
+-CS_AR.c = $(VERBOSE) $(CSTOOL_PREFIX)ar rc $(AR_FLAGS)
++COMPILE.c = $(V) $(CSTOOL_PREFIX)gcc $(CPP_FLAGS) $(C_FLAGS) -c
++LINK.c = $(V) $(CSTOOL_PREFIX)gcc $(LD_FLAGS)
++CS_AR.c = $(V) $(CSTOOL_PREFIX)ar rc $(AR_FLAGS)
+ 
+ SOURCES = $(wildcard *.c)
+ HEADERS = $(wildcard *.h)
+@@ -62,4 +62,4 @@
+ 
+ clean:
+ 	@echo Removing generated files..
+-	$(VERBOSE) -$(RM) -rf $(OBJFILES) lib/* *~ *.d .dep
++	$(V) -$(RM) -rf $(OBJFILES) lib/* *~ *.d .dep
+Index: dvsdk-4_02_00_06/dvsdk/c6accel_1_01_00_02/dsp/alg/pjt/Makefile
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/c6accel_1_01_00_06/dsp/alg/pjt/Makefile	2011-01-28 10:48:21.826256386 -0600
++++ dvsdk-4_02_00_06/dvsdk/c6accel_1_01_00_06/dsp/alg/pjt/Makefile	2011-01-28 10:48:53.481254640 -0600
+@@ -14,7 +14,7 @@
+ include ../../../Rules.make
+ 
+ # Comment this out if you want to see full compiler and linker output.
+-#VERBOSE = @
++#V = @
+ 
+ # Which compiler flags should be used?
+ BUILD_TYPE=release
+@@ -62,9 +62,9 @@
+ endif
+ endif
+ 
+-COMPILE.c	= $(VERBOSE) $(CODEGEN_INSTALL_DIR)/bin/cl6x $(C_FLAGS)
+-LD.c		= $(VERBOSE) $(CODEGEN_INSTALL_DIR)/bin/cl6x $(LD_FLAGS)
+-AR.c		= $(VERBOSE) $(CODEGEN_INSTALL_DIR)/bin/ar6x $(AR_FLAGS)
++COMPILE.c	= $(V) $(CODEGEN_INSTALL_DIR)/bin/cl6x $(C_FLAGS)
++LD.c		= $(V) $(CODEGEN_INSTALL_DIR)/bin/cl6x $(LD_FLAGS)
++AR.c		= $(V) $(CODEGEN_INSTALL_DIR)/bin/ar6x $(AR_FLAGS)
+ 
+ HEADERS		=  $(wildcard ../include/*.h)
+ SOURCES		=  $(wildcard ../src/*.c)
+Index: dvsdk-4_02_00_06/dvsdk/dmai_2_20_00_14/packages/ti/sdo/dmai/apps/Makefile.app
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/dmai_2_20_00_15/packages/ti/sdo/dmai/apps/Makefile.app	2011-01-28 10:51:09.142259759 -0600
++++ dvsdk-4_02_00_06/dvsdk/dmai_2_20_00_15/packages/ti/sdo/dmai/apps/Makefile.app	2011-01-28 10:51:52.873257345 -0600
+@@ -66,9 +66,9 @@
+ PLATFORM_XDC		 = $(strip $(PLATFORM_XDC_$(PLATFORM)))
+ 
+ # Should the full command be echoed to the console during build?
+-VERBOSE=false
++V=false
+ 
+-ifeq ($(VERBOSE), true)
++ifeq ($(V), true)
+     override PRE	=
+ else
+     override PRE	= @
+Index: dvsdk-4_02_00_06/dvsdk/dmai_2_20_00_14/packages/ti/sdo/dmai/apps/Makefile
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/dmai_2_20_00_15/packages/ti/sdo/dmai/apps/Makefile	2011-01-28 10:52:30.729255480 -0600
++++ dvsdk-4_02_00_06/dvsdk/dmai_2_20_00_15/packages/ti/sdo/dmai/apps/Makefile	2011-01-28 10:53:06.881259221 -0600
+@@ -34,7 +34,7 @@
+ CLEANSUBDIRS = $(addsuffix .clean, $(SUBDIRS))
+ INSTALLSUBDIRS = $(addsuffix .install, $(SUBDIRS))
+ 
+-ifeq ($(VERBOSE), true)
++ifeq ($(V), true)
+ 	MAKE := $(MAKE)
+ else
+ 	MAKE := $(MAKE) --no-print-directory
+Index: dvsdk-4_02_00_06/dvsdk/dmai_2_20_00_14/packages/ti/sdo/dmai/Makefile
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/dmai_2_20_00_15/packages/ti/sdo/dmai/Makefile	2011-01-28 10:53:39.990254370 -0600
++++ dvsdk-4_02_00_06/dvsdk/dmai_2_20_00_15/packages/ti/sdo/dmai/Makefile	2011-01-28 10:54:09.021252742 -0600
+@@ -61,9 +61,9 @@
+ PLATFORM_XDC		 = $(strip $(PLATFORM_XDC_$(PLATFORM)))
+ 
+ # Should the full command be echoed to the console during build?
+-VERBOSE=false
++V=false
+ 
+-ifeq ($(VERBOSE), true)
++ifeq ($(V), true)
+     override PRE	=
+ else
+     override PRE	= @
+Index: dvsdk-4_02_00_06/dvsdk/dsplink_1_65_00_02/dsplink/make/Linux/systools.mk
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/dsplink_1_65_00_02/dsplink/make/Linux/systools.mk	2011-01-28 10:55:37.850255814 -0600
++++ dvsdk-4_02_00_06/dvsdk/dsplink_1_65_00_02/dsplink/make/Linux/systools.mk	2011-01-28 10:56:31.217786979 -0600
+@@ -63,20 +63,20 @@
+ 
+ 
+ #   ============================================================================
+-#   Define macros to handle VERBOSE option
++#   Define macros to handle V option
+ #
+ #   CMDHIDE     : Token to prevent a command from echoing on the console
+ #   CHMECHO     : Token to allow/prevent a command to echoing on the console
+-#                 This macro is controlled by value of VERBOSE
++#                 This macro is controlled by value of V
+ #   ============================================================================
+ 
+ CMDHIDE := @
+ 
+-ifneq ("$(VERBOSE)", "1")
+-VERBOSE := 0
++ifneq ("$(V)", "1")
++V := 0
+ endif
+ 
+-ifeq ("$(VERBOSE)", "1")
++ifeq ("$(V)", "1")
+ CMDECHO :=
+ else
+ CMDECHO :=
+Index: dvsdk-4_02_00_06/dvsdk/dsplink_1_65_00_02/dsplink/make/current.mk
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/dsplink_1_65_00_02/dsplink/make/current.mk	2011-01-28 10:56:59.066258746 -0600
++++ dvsdk-4_02_00_06/dvsdk/dsplink_1_65_00_02/dsplink/make/current.mk	2011-01-28 10:58:01.610340897 -0600
+@@ -275,49 +275,49 @@
+ CMD_MAKEOBJ_GENERIC  = \
+ 	$(RUNIF) "exist $(SOURCE_GENERIC)" \
+ 	"$(MAKE) -C $(SOURCE_GENERIC) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_PLATFORM)$(DIRSEP)compile.mk     \
+-	$@ VERBOSE=$(VERBOSE)" ""
++	$@ V=$(V)" ""
+ 
+ CMD_MAKEOBJ_BUILDOS    = \
+ 	$(RUNIF) "exist $(SOURCE_BUILDOS)" \
+ 	"$(MAKE) -C $(SOURCE_BUILDOS) -f    $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_PLATFORM)$(DIRSEP)compile.mk     \
+-	$@ VERBOSE=$(VERBOSE)" ""
++	$@ V=$(V)" ""
+ 
+ CMD_MAKEOBJ_BUILDOS_VER  = \
+ 	$(RUNIF) "exist $(SOURCE_BUILDOS_VER)" \
+ 	"$(MAKE) -C $(SOURCE_BUILDOS_VER) -f    $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_PLATFORM)$(DIRSEP)compile.mk     \
+-	$@ VERBOSE=$(VERBOSE)" ""
++	$@ V=$(V)" ""
+ endif	
+ 
+ ifeq ("$(DEVICETYPE)", "DSP")
+ CMD_MAKEOBJ_GENERIC  = \
+ 	$(RUNIF) "exist $(SOURCE_GENERIC)" \
+ 	"$(MAKE) -C $(SOURCE_GENERIC) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_DSPDEVICECLASS)$(DIRSEP)compile.mk     \
+-	$@ VERBOSE=$(VERBOSE)" ""
++	$@ V=$(V)" ""
+ 
+ CMD_MAKEOBJ_BUILDOS    = \
+ 	$(RUNIF) "exist $(SOURCE_BUILDOS)" \
+ 	"$(MAKE) -C $(SOURCE_BUILDOS) -f    $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_DSPDEVICECLASS)$(DIRSEP)compile.mk     \
+-	$@ VERBOSE=$(VERBOSE)" ""
++	$@ V=$(V)" ""
+ 
+ CMD_MAKEOBJ_BUILDOS_VER  = \
+ 	$(RUNIF) "exist $(SOURCE_BUILDOS_VER)" \
+ 	"$(MAKE) -C $(SOURCE_BUILDOS_VER) -f    $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_DSPDEVICECLASS)$(DIRSEP)compile.mk     \
+-	$@ VERBOSE=$(VERBOSE)" ""
++	$@ V=$(V)" ""
+ 
+ CMD_MAKEOBJ_OS = \
+ 	$(RUNIF) "exist $(SOURCE_OS)" \
+ 	"$(MAKE) -C $(SOURCE_OS) -f $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_DSPDEVICECLASS)$(DIRSEP)compile.mk     \
+-	$@ VERBOSE=$(VERBOSE)" ""
++	$@ V=$(V)" ""
+ 	
+ CMD_MAKEOBJ_OS_DSPDEVICE = \
+ 	$(RUNIF) "exist $(SOURCE_OS_DSPDEVICE)" \
+ 	"$(MAKE) -C $(SOURCE_OS_DSPDEVICE) -f $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_DSPDEVICECLASS)$(DIRSEP)compile.mk     \
+-	$@ VERBOSE=$(VERBOSE)" ""
++	$@ V=$(V)" ""
+ 	
+ CMD_MAKEOBJ_OS_VER_DSPDEVICE = \
+ 	$(RUNIF) "exist $(SOURCE_OS_VER_DSPDEVICE)" \
+ 	"$(MAKE) -C $(SOURCE_OS_VER_DSPDEVICE) -f $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_DSPDEVICECLASS)$(DIRSEP)compile.mk     \
+-	$@ VERBOSE=$(VERBOSE)" ""
++	$@ V=$(V)" ""
+ endif	
+ 
+ 
+@@ -327,13 +327,13 @@
+ ifeq ("$(DEVICETYPE)", "GPP")
+ CMD_GEN_BLDINFO  = \
+ 	$(MAKE) -C $(SOURCE_GENERIC) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_PLATFORM)$(DIRSEP)compile.mk \
+-	$@ VERBOSE=$(VERBOSE)
++	$@ V=$(V)
+ endif
+ 
+ ifeq ("$(DEVICETYPE)", "DSP")
+ CMD_GEN_BLDINFO  = \
+ 	$(MAKE) -C $(SOURCE_GENERIC) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_DSPDEVICECLASS)$(DIRSEP)compile.mk \
+-	$@ VERBOSE=$(VERBOSE)
++	$@ V=$(V)
+ endif
+ 
+ #   ----------------------------------------------------------------------------
+@@ -403,10 +403,10 @@
+ trgdeb  :
+ 	$(CMDHIDE)$(BANNER) $(BANNER_L2) $(COMP_NAME) TARGET DEBUG
+ ifeq ("$(DEVICETYPE)", "GPP")
+-	$(MAKE) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_PLATFORM)$(DIRSEP)link.mk $@ VERBOSE=$(VERBOSE)
++	$(MAKE) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_PLATFORM)$(DIRSEP)link.mk $@ V=$(V)
+ endif
+ ifeq ("$(DEVICETYPE)", "DSP")
+-	$(MAKE) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_DSPDEVICECLASS)$(DIRSEP)link.mk $@ VERBOSE=$(VERBOSE)
++	$(MAKE) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_DSPDEVICECLASS)$(DIRSEP)link.mk $@ V=$(V)
+ endif
+ 
+ #   ----------------------------------------------------------------------------
+@@ -418,10 +418,10 @@
+ trgrel  :
+ 	$(CMDHIDE)$(BANNER) $(BANNER_L2) $(COMP_NAME) TARGET RELEASE
+ ifeq ("$(DEVICETYPE)", "GPP")
+-	$(MAKE) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_PLATFORM)$(DIRSEP)link.mk $@ VERBOSE=$(VERBOSE)
++	$(MAKE) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_PLATFORM)$(DIRSEP)link.mk $@ V=$(V)
+ endif
+ ifeq ("$(DEVICETYPE)", "DSP")
+-	$(MAKE) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_DSPDEVICECLASS)$(DIRSEP)link.mk $@ VERBOSE=$(VERBOSE)
++	$(MAKE) -f  $(PROJ_MAK_BUILDOS)$(DIRSEP)$(TI_DSPLINK_DSPDEVICECLASS)$(DIRSEP)link.mk $@ V=$(V)
+ endif
+ 
+ #   ============================================================================
+Index: dvsdk-4_02_00_06/dvsdk/dsplink_1_65_00_02/dsplink/make/DspBios/systools.mk
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/dsplink_1_65_00_02/dsplink/make/DspBios/systools.mk	2011-01-28 10:58:31.250254522 -0600
++++ dvsdk-4_02_00_06/dvsdk/dsplink_1_65_00_02/dsplink/make/DspBios/systools.mk	2011-01-28 10:59:03.906655182 -0600
+@@ -73,20 +73,20 @@
+ 
+ 
+ #   ----------------------------------------------------------------------------
+-#   Define macros to handle VERBOSE option
++#   Define macros to handle V option
+ #
+ #   CMDHIDE     : Token to prevent a command from echoing on the console
+ #   CHMECHO     : Token to allow/prevent a command to echoing on the console
+-#                 This macro is controlled by value of VERBOSE
++#                 This macro is controlled by value of V
+ #   ----------------------------------------------------------------------------
+ 
+ CMDHIDE := @
+ 
+-ifneq ("$(VERBOSE)", "1")
+-VERBOSE := 0
++ifneq ("$(V)", "1")
++V := 0
+ endif
+ 
+-ifeq ("$(VERBOSE)", "1")
++ifeq ("$(V)", "1")
+ CMDECHO :=
+ else
+ CMDECHO := @
+@@ -160,20 +160,20 @@
+ 
+ 
+ #   ----------------------------------------------------------------------------
+-#   Define macros to handle VERBOSE option
++#   Define macros to handle V option
+ #
+ #   CMDHIDE     : Token to prevent a command from echoing on the console
+ #   CHMECHO     : Token to allow/prevent a command to echoing on the console
+-#                 This macro is controlled by value of VERBOSE
++#                 This macro is controlled by value of V
+ #   ----------------------------------------------------------------------------
+ 
+ CMDHIDE := @
+ 
+-ifneq ("$(VERBOSE)", "1")
+-VERBOSE := 0
++ifneq ("$(V)", "1")
++V := 0
+ endif
+ 
+-ifeq ("$(VERBOSE)", "1")
++ifeq ("$(V)", "1")
+ CMDECHO :=
+ else
+ CMDECHO :=
+Index: dvsdk-4_02_00_06/dvsdk/dvsdk-demos_4_00_00_21/omap3530/encode/Makefile
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/dvsdk-demos_4_02_00_01/omap3530/encode/Makefile	2011-01-28 10:59:43.886257328 -0600
++++ dvsdk-4_02_00_06/dvsdk/dvsdk-demos_4_02_00_01/omap3530/encode/Makefile	2011-01-28 11:00:13.441912744 -0600
+@@ -39,7 +39,7 @@
+ include $(ROOTDIR)/Rules.make
+ 
+ # Comment this out if you want to see full compiler and linker output.
+-override VERBOSE = @
++override V = @
+ 
+ # Package path for the XDC tools
+ XDC_PATH = $(USER_XDC_PATH);../../packages;$(DMAI_INSTALL_DIR)/packages;$(CE_INSTALL_DIR)/packages;$(FC_INSTALL_DIR)/packages;$(LINK_INSTALL_DIR);$(XDAIS_INSTALL_DIR)/packages;$(CMEM_INSTALL_DIR)/packages;$(CODEC_INSTALL_DIR)/packages;$(LPM_INSTALL_DIR)/packages;$(C6ACCEL_INSTALL_DIR)/soc/packages
+@@ -73,8 +73,8 @@
+ 
+ LD_FLAGS += -L$(LINUXLIBS_INSTALL_DIR)/lib -lpthread -lasound -lfreetype -lpng -ljpeg -lz
+ 
+-COMPILE.c = $(VERBOSE) $(CSTOOL_PREFIX)gcc $(CPP_FLAGS) $(C_FLAGS) $(CPP_FLAGS) -c
+-LINK.c = $(VERBOSE) $(CSTOOL_PREFIX)gcc $(LD_FLAGS)
++COMPILE.c = $(V) $(CSTOOL_PREFIX)gcc $(CPP_FLAGS) $(C_FLAGS) $(CPP_FLAGS) -c
++LINK.c = $(V) $(CSTOOL_PREFIX)gcc $(LD_FLAGS)
+ 
+ SOURCES = $(wildcard *.c) $(wildcard ../*.c)
+ HEADERS = $(wildcard *.h) $(wildcard ../*.h)
+@@ -112,8 +112,8 @@
+ 	@echo ======== Building $(TARGET) ========
+ 	@echo Configuring application using $<
+ 	@echo
+-	$(VERBOSE) XDCPATH="$(XDC_PATH)" $(CONFIGURO) -o $(XDC_CFG) -t $(XDC_TARGET) -p $(XDC_PLATFORM) -b $(CONFIG_BLD) $(XDC_CFGFILE)
++	$(V) XDCPATH="$(XDC_PATH)" $(CONFIGURO) -o $(XDC_CFG) -t $(XDC_TARGET) -p $(XDC_PLATFORM) -b $(CONFIG_BLD) $(XDC_CFGFILE)
+ 
+ clean:
+ 	@echo Removing generated files..
+-	$(VERBOSE) -$(RM) -rf $(XDC_CFG) $(OBJFILES) $(TARGET) *~ *.d .dep
++	$(V) -$(RM) -rf $(XDC_CFG) $(OBJFILES) $(TARGET) *~ *.d .dep
+Index: dvsdk-4_02_00_06/dvsdk/dvsdk-demos_4_00_00_21/omap3530/edge_detection/Makefile
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/dvsdk-demos_4_02_00_01/omap3530/edge_detection/Makefile	2011-01-28 11:01:13.209257688 -0600
++++ dvsdk-4_02_00_06/dvsdk/dvsdk-demos_4_02_00_01/omap3530/edge_detection/Makefile	2011-01-28 11:01:58.717258169 -0600
+@@ -18,7 +18,7 @@
+ endif
+ 
+ # Comment this out if you want to see full compiler and linker output.
+-override VERBOSE = @
++override V = @
+ 
+ # Package path for the XDC tools
+ XDC_PATH = $(USER_XDC_PATH);../../packages;$(C6ACCEL_INSTALL_DIR)/soc/packages;$(DMAI_INSTALL_DIR)/packages;$(CE_INSTALL_DIR)/packages;$(FC_INSTALL_DIR)/packages;$(LINK_INSTALL_DIR);$(XDAIS_INSTALL_DIR)/packages;$(CMEM_INSTALL_DIR)/packages;$(LPM_INSTALL_DIR)/packages;$(XDAIS_INSTALL_DIR)/packages;$(CMEM_INSTALL_DIR)/packages;$(CODEC_INSTALL_DIR)/packages;$(BIOS_INSTALL_DIR)/packages;$(BIOSUTILS_INSTALL_DIR)/packages;$(EDMA3_LLD_INSTALL_DIR)/packages;$(LPM_INSTALL_DIR)/packages
+@@ -67,8 +67,8 @@
+ LD_FLAGS	+= -lpthread -lm -L$(LINUXLIBS_INSTALL_DIR)/lib 
+ C6ACCEL_LIB	+= $(C6ACCEL_INSTALL_DIR)/soc/c6accelw/lib/c6accelw_omap3530.a470MV
+ 
+-COMPILE.c = $(VERBOSE) $(CSTOOL_PREFIX)gcc $(CPP_FLAGS) $(C_FLAGS) $(CPP_FLAGS) -c $(shell cat $(XDC_CFLAGS)) 
+-LINK.c = $(VERBOSE) $(CSTOOL_PREFIX)gcc $(LD_FLAGS) -Wl,-Map,$(MAP) -o $@ $^
++COMPILE.c = $(V) $(CSTOOL_PREFIX)gcc $(CPP_FLAGS) $(C_FLAGS) $(CPP_FLAGS) -c $(shell cat $(XDC_CFLAGS))
++LINK.c = $(V) $(CSTOOL_PREFIX)gcc $(LD_FLAGS) -Wl,-Map,$(MAP) -o $@ $^
+ 
+ SOURCES = $(wildcard *.c)
+ HEADERS = $(wildcard *.h) 
+@@ -106,7 +106,7 @@
+ 	@echo ======== Building $(TARGET) ========
+ 	@echo Configuring application using $<
+ 	@echo
+-	$(VERBOSE) XDCPATH="$(XDC_PATH)" $(CONFIGURO) -o $(XDC_CFG) -t $(XDC_TARGET) -p $(XDC_PLATFORM) -b $(CONFIG_BLD) $(XDC_CFGFILE)
++	$(V) XDCPATH="$(XDC_PATH)" $(CONFIGURO) -o $(XDC_CFG) -t $(XDC_TARGET) -p $(XDC_PLATFORM) -b $(CONFIG_BLD) $(XDC_CFGFILE)
+ 	
+ clean:
+ 	@echo Removing generated files..
+Index: dvsdk-4_02_00_06/dvsdk/dvsdk-demos_4_00_00_21/omap3530/decode/Makefile
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/dvsdk-demos_4_02_00_01/omap3530/decode/Makefile	2011-01-28 11:02:14.790256558 -0600
++++ dvsdk-4_02_00_06/dvsdk/dvsdk-demos_4_02_00_01/omap3530/decode/Makefile	2011-01-28 11:02:34.527822854 -0600
+@@ -39,7 +39,7 @@
+ include $(ROOTDIR)/Rules.make
+ 
+ # Comment this out if you want to see full compiler and linker output.
+-override VERBOSE = @
++override V = @
+ 
+ # Package path for the XDC tools
+ XDC_PATH = $(USER_XDC_PATH);../../packages;$(DMAI_INSTALL_DIR)/packages;$(CE_INSTALL_DIR)/packages;$(FC_INSTALL_DIR)/packages;$(LINK_INSTALL_DIR);$(XDAIS_INSTALL_DIR)/packages;$(CMEM_INSTALL_DIR)/packages;$(CODEC_INSTALL_DIR)/packages;$(LPM_INSTALL_DIR)/packages;$(C6ACCEL_INSTALL_DIR)/soc/packages
+@@ -73,8 +73,8 @@
+ 
+ LD_FLAGS += -L$(LINUXLIBS_INSTALL_DIR)/lib -lpthread -lasound
+ 
+-COMPILE.c = $(VERBOSE) $(CSTOOL_PREFIX)gcc $(CPP_FLAGS) $(C_FLAGS) $(CPP_FLAGS) -c
+-LINK.c = $(VERBOSE) $(CSTOOL_PREFIX)gcc $(LD_FLAGS)
++COMPILE.c = $(V) $(CSTOOL_PREFIX)gcc $(CPP_FLAGS) $(C_FLAGS) $(CPP_FLAGS) -c
++LINK.c = $(V) $(CSTOOL_PREFIX)gcc $(LD_FLAGS)
+ 
+ SOURCES = $(wildcard *.c) $(wildcard ../*.c)
+ HEADERS = $(wildcard *.h) $(wildcard ../*.h)
+@@ -112,8 +112,8 @@
+ 	@echo ======== Building $(TARGET) ========
+ 	@echo Configuring application using $<
+ 	@echo
+-	$(VERBOSE) XDCPATH="$(XDC_PATH)" $(CONFIGURO) -o $(XDC_CFG) -t $(XDC_TARGET) -p $(XDC_PLATFORM) -b $(CONFIG_BLD) $(XDC_CFGFILE)
++	$(V) XDCPATH="$(XDC_PATH)" $(CONFIGURO) -o $(XDC_CFG) -t $(XDC_TARGET) -p $(XDC_PLATFORM) -b $(CONFIG_BLD) $(XDC_CFGFILE)
+ 
+ clean:
+ 	@echo Removing generated files..
+-	$(VERBOSE) -$(RM) -rf $(XDC_CFG) $(OBJFILES) $(TARGET) *~ *.d .dep
++	$(V) -$(RM) -rf $(XDC_CFG) $(OBJFILES) $(TARGET) *~ *.d .dep
+Index: dvsdk-4_02_00_06/dvsdk/dvtb_4_20_15/packages/ti/sdo/dvtb/omap3530/wince/Makefile
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/dvtb_4_20_18/packages/ti/sdo/dvtb/omap3530/wince/Makefile	2011-01-28 11:03:46.521253574 -0600
++++ dvsdk-4_02_00_06/dvsdk/dvtb_4_20_18/packages/ti/sdo/dvtb/omap3530/wince/Makefile	2011-01-28 11:04:13.274950974 -0600
+@@ -44,10 +44,10 @@
+ TARGET=dvtb
+ 
+ # Should the full command be echoed to the console during build?
+-VERBOSE=false
+-#VERBOSE=true
++V=false
++#V=true
+ 
+-ifeq ($(VERBOSE), true)
++ifeq ($(V), true)
+     override PRE	=
+ else
+     override PRE	= @
+Index: dvsdk-4_02_00_06/dvsdk/dvtb_4_20_15/packages/ti/sdo/dvtb/dm3730/wince/Makefile
+===================================================================
+--- dvsdk-4_02_00_06.orig/dvsdk/dvtb_4_20_18/packages/ti/sdo/dvtb/dm3730/wince/Makefile	2011-01-28 11:04:43.521253577 -0600
++++ dvsdk-4_02_00_06/dvsdk/dvtb_4_20_18/packages/ti/sdo/dvtb/dm3730/wince/Makefile	2011-01-28 11:05:08.397253986 -0600
+@@ -44,10 +44,10 @@
+ TARGET=dvtb
+ 
+ # Should the full command be echoed to the console during build?
+-VERBOSE=false
+-#VERBOSE=true
++V=false
++#V=true
+ 
+-ifeq ($(VERBOSE), true)
++ifeq ($(V), true)
+     override PRE	=
+ else
+     override PRE	= @

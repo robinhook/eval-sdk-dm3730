@@ -1,0 +1,15 @@
+#
+# Ridgerun BSP Configuration file for Beagleboard
+#
+
+# Now we are free to configure board specific issues
+config BSP_OMAP3_BEAGLEBOARD
+       bool
+       default y
+
+config BSP_NET_HAS_USB0
+	bool
+	select USB_NET_SMSC95XX
+	select BSP_NET_HAS_NET
+	default y
+

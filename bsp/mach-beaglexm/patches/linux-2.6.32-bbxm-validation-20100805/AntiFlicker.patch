@@ -1,0 +1,13 @@
+Index: kernel/linux-2.6.32/drivers/media/video/ti-media/omap_vout.c
+===================================================================
+--- kernel.orig/linux-2.6.32/drivers/media/video/ti-media/omap_vout.c	2011-01-13 09:40:33.493297876 -0600
++++ kernel/linux-2.6.32/drivers/media/video/ti-media/omap_vout.c	2011-01-13 09:40:47.061069779 -0600
+@@ -393,7 +393,7 @@
+  */
+ static inline int rotation_enabled(const struct omap_vout_device *vout)
+ {
+-	return vout->rotation || vout->mirror;
++	return 1;
+ }
+ 
+ /*

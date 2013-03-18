@@ -1,0 +1,26 @@
+Index: xloader/src/config.mk
+===================================================================
+--- xloader.orig/src/config.mk	2011-12-22 11:30:37.000000000 -0600
++++ xloader/src/config.mk	2012-09-19 11:41:57.592023528 -0600
+@@ -117,6 +117,7 @@
+ 
+ CPPFLAGS := $(DBGFLAGS) $(OPTFLAGS) $(RELFLAGS)		\
+ 	-D__KERNEL__ -DTEXT_BASE=$(TEXT_BASE)		\
++	-DCFG_LOADADDR=$(CFG_LOADADDRS)			\
+ 	-I$(TOPDIR)/include				\
+ 	-fno-builtin -ffreestanding -nostdinc -isystem	\
+ 	$(gccincdir) -pipe $(PLATFORM_CPPFLAGS)
+Index: xloader/src/include/configs/omap3beagle.h
+===================================================================
+--- xloader.orig/src/include/configs/omap3beagle.h	2011-12-22 11:30:37.000000000 -0600
++++ xloader/src/include/configs/omap3beagle.h	2012-09-19 11:41:57.592023528 -0600
+@@ -104,7 +104,9 @@
+ /*
+  * Miscellaneous configurable options
+  */
++#ifndef CFG_LOADADDR
+ #define CFG_LOADADDR		0x80008000
++#endif
+   
+ #undef	CFG_CLKS_IN_HZ		/* everything, incl board info, in Hz */
+  

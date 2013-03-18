@@ -1,0 +1,13 @@
+Index: kernel/linux-2.6.37-psp04.02.00.07/include/asm-generic/int-ll64.h
+===================================================================
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/include/asm-generic/int-ll64.h	2012-09-11 12:22:30.129100957 -0600
++++ kernel/linux-2.6.37-psp04.02.00.07/include/asm-generic/int-ll64.h	2012-09-11 11:49:27.365038961 -0600
+@@ -8,7 +8,7 @@
+ #ifndef _ASM_GENERIC_INT_LL64_H
+ #define _ASM_GENERIC_INT_LL64_H
+ 
+-#include <asm/bitsperlong.h>
++#include <asm-generic/bitsperlong.h>
+ 
+ #ifndef __ASSEMBLY__
+ /*

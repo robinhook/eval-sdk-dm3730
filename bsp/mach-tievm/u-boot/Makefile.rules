@@ -1,0 +1,29 @@
+#$L$
+# Copyright (C) 2011 Ridgerun (http://www.ridgerun.com). 
+#
+#$L$
+
+ifeq ($(DEVDIR),)
+$(error ====== DEVDIR variable is empty, invoke this Makefile from the BSP root, or provide the path to it =====)
+endif
+include $(DEVDIR)/bsp/mach/Make.conf
+
+#MACH IDENTIFIERS
+UBOOT_BOARD_CONFIG = omap3_evm_config
+XLOADER_BOARD_CONFIG = omap3evm_config
+XLOADER_VERSION = 1.51
+
+.PHONY: mach_build mach_clean
+
+mach_post_build:
+
+mach_build: xloader_build
+
+mach_clean: xloader_clean
+
+xloader_build:
+	$(V) $(MAKE) -C xloader all 
+
+xloader_clean:
+	$(V) $(MAKE) -C xloader clean
+

@@ -1,0 +1,26 @@
+Index: dvsdk-4_03_00_06/dvsdk/dvtb_4_20_18/packages/ti/sdo/dvtb/dm3730/linux/config.bld
+===================================================================
+--- dvsdk-4_03_00_06.orig/dvsdk/dvtb_4_20_18/packages/ti/sdo/dvtb/dm3730/linux/config.bld	2012-04-14 10:53:53.071027209 -0600
++++ dvsdk-4_03_00_06/dvsdk/dvtb_4_20_18/packages/ti/sdo/dvtb/dm3730/linux/config.bld	2012-04-14 10:54:21.725722300 -0600
+@@ -38,7 +38,7 @@
+ 
+ /* Use the target and configure it as necessary. */
+ var GCArmv5T = xdc.useModule('gnu.targets.arm.GCArmv5T');
+-GCArmv5T.LONGNAME = 'bin/arm-arago-linux-gnueabi-gcc';
++GCArmv5T.LONGNAME = 'bin/arm-none-linux-gnueabi-gcc';
+ 
+ 
+ /* Populate the Build.targets array so Configuro knows about this target */
+Index: dvsdk-4_03_00_06/dvsdk/dvtb_4_20_18/packages/ti/sdo/dvtb/dm3730/linux/Makefile
+===================================================================
+--- dvsdk-4_03_00_06.orig/dvsdk/dvtb_4_20_18/packages/ti/sdo/dvtb/dm3730/linux/Makefile	2012-04-14 10:55:43.318835157 -0600
++++ dvsdk-4_03_00_06/dvsdk/dvtb_4_20_18/packages/ti/sdo/dvtb/dm3730/linux/Makefile	2012-04-14 10:55:48.249233525 -0600
+@@ -73,7 +73,7 @@
+ AR = $(MVTOOL_PREFIX)ar
+ LN = $(MVTOOL_PREFIX)gcc
+ #LD_LIBS = -lpthread $(LINUXLIBS_INSTALL_DIR)/lib/libasound.so.2 $(LINUXLIBS_INSTALL_DIR)/lib/libncurses.so $(EDITLINE_LIB)
+-LD_LIBS = -lpthread -L$(LINUXLIBS_INSTALL_DIR)/lib -Wl,-rpath-link,$(LINUXLIBS_INSTALL_DIR)/lib -lasound -lncursesw  $(EDITLINE_LIB)
++LD_LIBS = -lpthread -L$(LINUXLIBS_INSTALL_DIR)/lib -Wl,-rpath-link,$(LINUXLIBS_INSTALL_DIR)/lib -lasound -lncurses  $(EDITLINE_LIB)
+ 
+ VPATH= $(PAL_SRCVPATH)
+ 

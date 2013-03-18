@@ -1,0 +1,31 @@
+Index: u-boot-2009.11/src/cpu/arm_cortexa8/omap3/reset.S
+===================================================================
+--- u-boot-2009.11.orig/src/cpu/arm_cortexa8/omap3/reset.S	2011-08-02 12:17:43.132436237 -0600
++++ u-boot-2009.11/src/cpu/arm_cortexa8/omap3/reset.S	2011-08-02 12:17:45.732436238 -0600
+@@ -27,10 +27,12 @@
+ reset_cpu:
+ 	ldr	r1, rstctl			@ get addr for global reset
+ 						@ reg
+-	mov	r3, #0x2			@ full reset pll + mpu
++	ldr	r3, rstbit			@ sw reset bit
+ 	str	r3, [r1]			@ force reset
+ 	mov	r0, r0
+ _loop_forever:
+ 	b	_loop_forever
+ rstctl:
+ 	.word	PRM_RSTCTRL
++rstbit:
++	.word	PRM_RSTCTRL_RESET
+\ No newline at end of file
+Index: u-boot-2009.11/src/include/asm-arm/arch-omap3/cpu.h
+===================================================================
+--- u-boot-2009.11.orig/src/include/asm-arm/arch-omap3/cpu.h	2011-08-02 12:17:43.112436236 -0600
++++ u-boot-2009.11/src/include/asm-arm/arch-omap3/cpu.h	2011-08-02 12:17:45.736436238 -0600
+@@ -409,6 +409,7 @@
+ };
+ #else /* __ASSEMBLY__ */
+ #define PRM_RSTCTRL		0x48307250
++#define PRM_RSTCTRL_RESET	0x04
+ #endif /* __ASSEMBLY__ */
+ #endif /* __KERNEL_STRICT_NAMES */
+ 

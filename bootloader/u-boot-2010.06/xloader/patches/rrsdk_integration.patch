@@ -1,0 +1,13 @@
+Index: xloader/src/lib/board.c
+===================================================================
+--- xloader.orig/src/lib/board.c	2011-12-22 11:30:37.000000000 -0600
++++ xloader/src/lib/board.c	2012-03-30 08:03:40.617020267 -0600
+@@ -40,7 +40,7 @@
+ #ifdef CFG_PRINTF
+ int print_info(void)
+ {
+-	printf("\n\nTexas Instruments X-Loader 1.51 ("
++	printf("\n\nCustomized by RidgeRun Embedded Solutions TI XLOADER 1.51 ("
+ 			__DATE__ " - " __TIME__ ")\n");
+ 	return 0;
+ }

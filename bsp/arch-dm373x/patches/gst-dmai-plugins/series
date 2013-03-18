@@ -1,0 +1,4 @@
+fix-build-issue-for-omaps.patch
+omapsinkSupport.patch
+add-missing-parameters-initialization.patch
+enable-cmem-debug-dm37x.patch

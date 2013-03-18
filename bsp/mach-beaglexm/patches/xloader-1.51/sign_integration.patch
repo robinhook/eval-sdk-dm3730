@@ -1,0 +1,41 @@
+Index: xloader/src/Makefile
+===================================================================
+--- xloader.orig/src/Makefile	2012-09-19 11:39:56.995705450 -0600
++++ xloader/src/Makefile	2012-09-19 11:40:38.104031860 -0600
+@@ -79,11 +79,16 @@
+ #########################################################################
+ #########################################################################
+ 
+-ALL = x-load.bin System.map
++ALL = x-load.bin System.map ift
+ 
+ all:		$(ALL)
+ 
++ift: x-load.bin.ift
+ 
++x-load.bin.ift: signGP System.map x-load.bin
++	TEXT_BASE=`grep -w _start System.map|cut -d ' ' -f1`
++	./signGP x-load.bin $(TEXT_BASE)
++ 
+ x-load.bin:	x-load
+ 		$(OBJCOPY) ${OBJCFLAGS} -O binary $< $@
+ 
+@@ -105,6 +110,9 @@
+ oneboot:	x-load.bin
+ 		scripts/mkoneboot.sh
+ 
++signGP:		scripts/signGP.c
++		gcc -O3 -o signGP  $<
++
+ #########################################################################
+ else
+ all install x-load x-load.srec oneboot depend dep:
+@@ -173,7 +181,7 @@
+ 		| xargs rm -f
+ 	rm -f $(OBJS) *.bak tags TAGS
+ 	rm -fr *.*~
+-	rm -f x-load x-load.map $(ALL)
++	rm -f x-load x-load.map $(ALL) x-load.bin.ift signGP
+ 	rm -f include/asm/proc include/asm/arch
+ 
+ mrproper \

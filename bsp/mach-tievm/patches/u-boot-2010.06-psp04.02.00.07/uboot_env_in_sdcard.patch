@@ -1,0 +1,73 @@
+Index: u-boot-2010.06/src/include/configs/omap3_evm.h
+===================================================================
+--- u-boot-2010.06.orig/src/include/configs/omap3_evm.h	2012-03-29 11:11:08.156771404 -0600
++++ u-boot-2010.06/src/include/configs/omap3_evm.h	2012-03-29 11:13:42.348974946 -0600
+@@ -200,39 +200,24 @@
+ 
+ #define CONFIG_BOOTFILE		uImage
+ 
+-#define CONFIG_EXTRA_ENV_SETTINGS \
+-	"loadaddr=0x82000000\0" \
+-	"usbtty=cdc_acm\0" \
+-	"console=ttyO0,115200n8\0" \
+-	"mmcargs=setenv bootargs console=${console} " \
+-		"root=/dev/mmcblk0p2 rw " \
+-		"rootfstype=ext3 rootwait omap_vout.vid1_static_vrfb_alloc=y\0" \
+-	"nandargs=setenv bootargs console=${console} " \
+-		"root=/dev/mtdblock4 rw " \
+-		"rootfstype=jffs2\0" \
+-	"loadbootscript=fatload mmc 0 ${loadaddr} boot.scr\0" \
+-	"bootscript=echo Running bootscript from mmc ...; " \
+-		"source ${loadaddr}\0" \
+-	"loaduimage=fatload mmc 0 ${loadaddr} uImage\0" \
+-	"mmcboot=echo Booting from mmc ...; " \
+-		"run mmcargs; " \
+-		"bootm ${loadaddr}\0" \
+-	"nandboot=echo Booting from nand ...; " \
+-		"run nandargs; " \
+-		"onenand read ${loadaddr} 280000 400000; " \
+-		"bootm ${loadaddr}\0" \
+-
+-#define CONFIG_BOOTCOMMAND \
+-	"if mmc init; then " \
+-		"if run loadbootscript; then " \
+-			"run bootscript; " \
+-		"else " \
+-			"if run loaduimage; then " \
+-				"run mmcboot; " \
+-			"else run nandboot; " \
+-			"fi; " \
+-		"fi; " \
+-	"else run nandboot; fi"
++# define CONFIG_EXTRA_ENV_SETTINGS \
++       "loadaddr=0x82000000\0" \
++       "loadbootenv=fatload mmc 0 ${loadaddr} uEnv.txt\0" \
++       "importbootenv=echo Importing environment from mmc ...; env import -t ${loadaddr} ${filesize}\0" \
++       "loaduimage=fatload mmc 0 ${loadaddr} uImage\0" \
++       "nandboot=echo Booting from nand ...; run nandargs; nand read ${loadaddr} 280000 400000; bootm ${loadaddr}\0" \
++       "nandargs=setenv bootargs console=${console} vram=${vram} omapfb.mode=dvi:${dvimode} omapfb.debug=y omapdss.def_disp=${defaultdisplay} root=${nandroot} rootfs\0"
++
++# define CONFIG_BOOTCOMMAND \
++	"if mmc init 0; then " \
++				"if run loadbootenv ; then " \
++						"run importbootenv ; " \
++							"if test -n ${uenvcmd} ; then " \
++								"run uenvcmd; " \
++							"fi ;" \
++				"fi ;" \
++	"else run nandboot;" \
++	"fi"
+ 
+ #define CONFIG_AUTO_COMPLETE	1
+ /*
+@@ -328,6 +313,10 @@
+ #define CONFIG_ENV_OFFSET		boot_flash_off
+ #define CONFIG_ENV_ADDR			boot_flash_env_addr
+ 
++#if defined(CONFIG_MMC) && !defined(CONFIG_ENV_IS_IN_NAND)
++#define CONFIG_CMD_ENV
++#endif
++
+ /*-----------------------------------------------------------------------
+  * CFI FLASH driver setup
+  */

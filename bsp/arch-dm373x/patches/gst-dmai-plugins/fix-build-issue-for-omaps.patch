@@ -1,0 +1,13 @@
+Index: gst-dmai-plugins/src/src/gstticodecplugin.c
+===================================================================
+--- gst-dmai-plugins.orig/src/src/gstticodecplugin.c	2012-04-16 09:31:15.078982788 -0600
++++ gst-dmai-plugins/src/src/gstticodecplugin.c	2012-04-16 09:31:38.735649207 -0600
+@@ -58,7 +58,7 @@
+ #include "ti_encoders.h"
+ #include "ti_decoders.h"
+ #include "ittiam_encoders.h"
+-
++#include "caps.h"
+ 
+ extern struct gstti_decoder_ops gstti_viddec_ops;
+ extern struct gstti_decoder_ops gstti_viddec2_ops;

@@ -1,0 +1,18 @@
+Index: gst-dmai-plugins/src/src/dm37x.cfg
+===================================================================
+--- gst-dmai-plugins.orig/src/src/dm37x.cfg	2012-10-16 10:39:47.000000000 -0600
++++ gst-dmai-plugins/src/src/dm37x.cfg	2013-01-18 17:04:56.359585166 -0600
+@@ -44,3 +44,13 @@
+ 
+ var SCPY = xdc.useModule('ti.sdo.fc.scpy.SCPY');
+ var SDMA = xdc.useModule('ti.sdo.linuxutils.sdma.SDMA');
++
++
++var CMEM = xdc.useModule('ti.sdo.linuxutils.cmem.CMEM');
++
++var cmemdebug = "" + java.lang.System.getenv("CONFIG_PROPRIETARY_TI_GST_CMEM_DEBUG");
++if (cmemdebug == "y") {
++    print ("Building with CMEM debug");
++    CMEM.debug = true;
++}
++

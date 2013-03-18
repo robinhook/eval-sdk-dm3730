@@ -1,0 +1,3 @@
+config UBOOT_USE_XLOADER
+	bool
+	default y

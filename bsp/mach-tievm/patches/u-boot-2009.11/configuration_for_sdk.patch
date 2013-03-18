@@ -1,0 +1,15 @@
+Index: u-boot-2009.11/src/include/configs/omap3_evm.h
+===================================================================
+--- u-boot-2009.11.orig/src/include/configs/omap3_evm.h	2011-07-21 10:19:43.798566752 -0600
++++ u-boot-2009.11/src/include/configs/omap3_evm.h	2011-07-21 10:26:08.977329916 -0600
+@@ -154,7 +154,9 @@
+ #define CONFIG_CMD_MMC		/* MMC support			*/
+ #undef CONFIG_CMD_ONENAND	/* ONENAND support		*/
+ #define CONFIG_CMD_NAND		/* NAND support			*/
+-#define CONFIG_CMD_DHCP
++#define CONFIG_CMD_DHCP		/* DHCP support			*/
++#define CONFIG_CMD_CACHE
++#define CONFIG_CMD_ASKENV
+ #define CONFIG_CMD_PING
+ 
+ #undef CONFIG_CMD_FLASH		/* flinfo, erase, protect	*/

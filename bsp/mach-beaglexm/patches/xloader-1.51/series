@@ -1,0 +1,4 @@
+add_signgp_source.patch
+sign_integration.patch
+xloader-remove-fixed-uboot-addrs.patch
+add_support_bbxm_revc.patch

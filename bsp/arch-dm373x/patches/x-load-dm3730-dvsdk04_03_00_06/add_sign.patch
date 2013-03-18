@@ -1,0 +1,119 @@
+Index: xloader/src/scripts/signGP.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xloader/src/scripts/signGP.c	2010-07-27 21:54:13.000000000 -0600
+@@ -0,0 +1,73 @@
++//
++// signGP.c
++// Read the x-load.bin file and write out the x-load.bin.ift file.
++// The signed image is the original pre-pended with the size of the image
++// and the load address.  If not entered on command line, file name is
++// assumed to be x-load.bin in current directory and load address is
++// 0x40200800.
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <fcntl.h>
++#include <sys/stat.h>
++#include <string.h>
++#include <malloc.h>
++
++
++main(int argc, char *argv[])
++{
++	int	i;
++	char	ifname[FILENAME_MAX], ofname[FILENAME_MAX], ch;
++	FILE	*ifile, *ofile;
++	unsigned long	loadaddr, len;
++	struct stat	sinfo;
++
++
++	// Default to x-load.bin and 0x40200800.
++	strcpy(ifname, "x-load.bin");
++	loadaddr = 0x40200800;
++
++	if ((argc == 2) || (argc == 3))
++		strcpy(ifname, argv[1]);
++
++	if (argc == 3)
++		loadaddr = strtol(argv[2], NULL, 16);
++
++	// Form the output file name.
++	strcpy(ofname, ifname);
++	strcat(ofname, ".ift");
++
++	// Open the input file.
++	ifile = fopen(ifname, "rb");
++	if (ifile == NULL) {
++		printf("Cannot open %s\n", ifname);
++		exit(0);
++	}
++
++	// Get file length.
++	stat(ifname, &sinfo);
++	len = sinfo.st_size;
++
++	// Open the output file and write it.
++	ofile = fopen(ofname, "wb");
++	if (ofile == NULL) {
++		printf("Cannot open %s\n", ofname);
++		fclose(ifile);
++		exit(0);
++	}
++
++	// Pad 1 sector of zeroes.
++	//ch = 0x00;
++	//for (i=0; i<0x200; i++)
++	//	fwrite(&ch, 1, 1, ofile);
++
++	fwrite(&len, 1, 4, ofile);
++	fwrite(&loadaddr, 1, 4, ofile);
++	for (i=0; i<len; i++) {
++		fread(&ch, 1, 1, ifile);
++		fwrite(&ch, 1, 1, ofile);
++	}
++
++	fclose(ifile);
++	fclose(ofile);
++}
+
+Index: xloader/src/Makefile
+===================================================================
+--- xloader.orig/src/Makefile	2012-03-29 14:05:44.093231423 -0600
++++ xloader/src/Makefile	2012-03-29 14:09:34.852784621 -0600
+@@ -79,10 +79,15 @@
+ #########################################################################
+ #########################################################################
+ 
+-ALL = x-load.bin System.map
++ALL = x-load.bin System.map ift
+ 
+ all:		$(ALL)
+ 
++ift: x-load.bin.ift
++
++x-load.bin.ift: signGP System.map x-load.bin
++	TEXT_BASE=`grep -w _start System.map|cut -d ' ' -f1`
++	./signGP x-load.bin $(TEXT_BASE)
+ 
+ x-load.bin:	x-load
+ 		$(OBJCOPY) ${OBJCFLAGS} -O binary $< $@
+@@ -105,6 +110,9 @@
+ oneboot:	x-load.bin
+ 		scripts/mkoneboot.sh
+ 
++signGP:		scripts/signGP.c
++		gcc -O3 -o signGP  $<
++
+ #########################################################################
+ else
+ all install x-load x-load.srec oneboot depend dep:
+@@ -173,7 +181,7 @@
+ 		| xargs rm -f
+ 	rm -f $(OBJS) *.bak tags TAGS
+ 	rm -fr *.*~
+-	rm -f x-load x-load.map $(ALL)
++	rm -f x-load x-load.map $(ALL) x-load.bin.ift signGP
+ 	rm -f include/asm/proc include/asm/arch
+ 
+ mrproper \

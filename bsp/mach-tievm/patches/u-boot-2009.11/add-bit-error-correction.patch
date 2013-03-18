@@ -1,0 +1,13 @@
+Index: u-boot-2009.11/xloader/Makefile
+===================================================================
+--- u-boot-2009.11/xloader/Makefile	2011-07-20 13:27:35.007292459 -0600
++++ u-boot-2009.11/xloader/Makefile	2011-07-20 13:27:59.687330233 -0600
+@@ -23,7 +23,7 @@
+ 
+ xloader_built: $(XLOADER) xloader_patched xloader_configured
+ 	$(V) $(ECHO) "Building $(XLOADER)-$(XLOADER_VERSION)..."
+-	$(V) $(MAKE) -C src all CROSS_COMPILE=$(TOOLCHAIN_PREFIX)-  $(QOUT) $(ERRQOUT)
++	$(V) $(MAKE) -C src all CROSS_COMPILE=$(TOOLCHAIN_PREFIX)- PLATFORM_RELFLAGS=-DFOUR_BIT_ERROR_CORRECT $(QOUT) $(ERRQOUT)
+ 	$(V) touch $@
+ 
+ xloader_configured: xloader_patched
