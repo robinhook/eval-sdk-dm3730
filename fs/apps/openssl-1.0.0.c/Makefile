@@ -33,7 +33,7 @@ CFLAGS+=-I$(FSDEVROOT)/usr/include
 
 built: configured
 	$(V) touch $(ARCH)/Makefile
-	$(V) $(MAKE) -C $(ARCH) CC=$(CC) AR="$(AR) r" LD=$(LD) INSTALLTOP=/usr OPENSSLDIR=/usr/ssl $(QOUT)
+	$(V) $(MAKE) -C $(ARCH) CC="$(CC)" AR="$(AR) r" LD=$(LD) INSTALLTOP=/usr OPENSSLDIR=/usr/ssl $(QOUT)
 	$(V) touch $@
 
 configured: patch
