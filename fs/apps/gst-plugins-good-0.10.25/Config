@@ -1,4 +1,5 @@
 config FS_APPS_GSTREAMER_PLUGINS_GOOD_0_10_25
+	default y
 	bool "gstreamer-plugins-good 0.10.25"
         select FS_APPS_GSTREAMER
         select FS_APPS_GLIB
@@ -11,6 +12,7 @@ config FS_APPS_GSTREAMER_PLUGINS_GOOD_0_10_25
 
 config FS_APPS_GSTREAMER_PLUGINS_GOOD_V4L2
 	bool "enable video4linux2"
+	default y
 	depends on FS_APPS_GSTREAMER_PLUGINS_GOOD_0_10_25
 	help
 	Compile gst plugin for video4linux 2
