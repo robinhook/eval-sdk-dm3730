@@ -1,0 +1,15 @@
+#!/bin/sh
+
+#Configure audio capture:
+echo "Configuring Audio Capture..."
+amixer sset 'Analog' 1 # 6dB amplification
+amixer sset 'Analog Left AUXL' cap
+amixer sset 'Analog Right AUXR' cap
+amixer sset 'TX1' 'Analog'
+amixer sset 'TX1 Digital' 5 # 5db amplification
+
+echo "Configuring Audio Playback..."
+amixer sset 'DAC1 Digital Fine' 40
+amixer sset 'Headset' 2
+amixer sset 'HeadsetL Mixer AudioL1' on
+amixer sset 'HeadsetR Mixer AudioR1' on
