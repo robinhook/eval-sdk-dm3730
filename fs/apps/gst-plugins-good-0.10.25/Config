@@ -19,7 +19,7 @@ config FS_APPS_GSTREAMER_PLUGINS_GOOD_V4L2
 
 config FS_APPS_GSTREAMER_PLUGINS_GOOD_FLAC
 	bool "enable flac support"
-	default n
+	default y
 	depends on FS_APPS_GSTREAMER_PLUGINS_GOOD_0_10_25
 	select FS_APPS_FLAC
 	help
