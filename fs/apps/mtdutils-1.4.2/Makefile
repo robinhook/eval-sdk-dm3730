@@ -12,6 +12,8 @@ BINARIES= usr/sbin/{doc_loadbios,docfdisk,flash_erase,flash_eraseall,flash_info,
 	usr/sbin/{nftl_format,nftldump,recv_image,rfddump,rfdformat,serve_image,sumtool,ubiattach}\
 	usr/sbin/{ubicrc32,ubidetach,ubiformat,ubimkvol,ubinfo,ubinize,ubirename,ubirmvol,ubirsvol}
 
+CCACHE_ENABLE=no
+
 APPS_CFLAGS+=-I$(FSDEVROOT)/usr/include
 FETCHER_EXTRACT_DIRECTORY_NAME=src
 build: rrfetched built
