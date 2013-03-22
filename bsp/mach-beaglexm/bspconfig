@@ -1043,7 +1043,7 @@ CONFIG_FS_INTERNALS=y
 #
 # Extra parameters to pass to kernel boot args
 #
-CONFIG_BSP_EXTRA_BOOT_ARGS="mpurate=1000 vram=10M omapfb.vram=0:10M omapdss.def_disp=\"dvi\" omapfb.mode=dvi:1280x1024MR-24@60 mem=89M@0x80000000 mem=352M@0x8A000000 rootwait=3"
+CONFIG_BSP_EXTRA_BOOT_ARGS="mpurate=1000 vram=10M omapfb.vram=0:10M omapdss.def_disp=\"dvi\" omapfb.mode=dvi:1280x1024MR-24@60 mem=89M@0x80000000 mem=352M@0x8A000000 rootwait=5"
 
 #
 # Kernel configuration options
