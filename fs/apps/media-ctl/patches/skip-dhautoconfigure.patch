@@ -1,0 +1,10 @@
+Index: media-ctl/src/debian/rules
+===================================================================
+--- media-ctl.orig/src/debian/rules	2013-01-11 11:32:43.000000000 -0600
++++ media-ctl/src/debian/rules	2013-01-11 11:37:03.472601133 -0600
+@@ -8,5 +8,4 @@
+ 
+ override_dh_auto_configure:
+ 	autoreconf -i
+-	dh_auto_configure
+ 

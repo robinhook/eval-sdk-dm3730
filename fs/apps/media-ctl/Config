@@ -1,0 +1,7 @@
+config FS_APPS_MEDIA_CTL
+    bool "media-ctl"
+    default y
+    help
+    Program that helps configure ISP, the version used matches the date it was
+	imported to the SDK.
+
