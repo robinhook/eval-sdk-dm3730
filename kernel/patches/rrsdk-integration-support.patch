@@ -104,7 +104,15 @@ Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/Kconfig
  
  comment "Audio decoders"
  
-@@ -754,6 +754,7 @@
+@@ -346,6 +346,7 @@
+ 
+ config VIDEO_MT9V113
+ 	tristate "Aptina MT9V113 VGA CMOS IMAGE SENSOR"
++	default y
+ 	depends on VIDEO_V4L2 && I2C
+ 	---help---
+ 	  This is a Video4Linux2 sensor-level driver for the Aptina MT9V113
+@@ -754,6 +755,7 @@
  config VIDEO_OMAP3
  	tristate "OMAP 3 Camera support (EXPERIMENTAL)"
  	select OMAP_IOMMU
