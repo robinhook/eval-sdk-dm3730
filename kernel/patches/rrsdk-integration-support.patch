@@ -1,14 +1,14 @@
 Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/staging/echo/Makefile
 ===================================================================
---- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/staging/echo/Makefile	2011-12-22 11:30:45.000000000 -0600
-+++ kernel/linux-2.6.37-psp04.02.00.07/drivers/staging/echo/Makefile	2012-09-13 12:01:30.663649146 -0600
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/staging/echo/Makefile
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/staging/echo/Makefile
 @@ -1 +1 @@
 -obj-$(CONFIG_ECHO) += echo.o
 +obj-$(CONFIG_ECHOLINE) += echo.o
 Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/net/tokenring/Kconfig
 ===================================================================
---- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/net/tokenring/Kconfig	2011-12-22 11:30:51.000000000 -0600
-+++ kernel/linux-2.6.37-psp04.02.00.07/drivers/net/tokenring/Kconfig	2012-09-13 12:01:30.667645146 -0600
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/net/tokenring/Kconfig
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/net/tokenring/Kconfig
 @@ -3,7 +3,7 @@
  #
  
@@ -44,8 +44,8 @@ Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/net/tokenring/Kconfig
 +endif # TOKENRING
 Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/staging/echo/Kconfig
 ===================================================================
---- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/staging/echo/Kconfig	2011-12-22 11:30:45.000000000 -0600
-+++ kernel/linux-2.6.37-psp04.02.00.07/drivers/staging/echo/Kconfig	2012-09-13 12:01:30.667645146 -0600
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/staging/echo/Kconfig
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/staging/echo/Kconfig
 @@ -1,4 +1,4 @@
 -config ECHO
 +config ECHOLINE
@@ -54,8 +54,8 @@ Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/staging/echo/Kconfig
  	---help---
 Index: kernel/linux-2.6.37-psp04.02.00.07/Makefile
 ===================================================================
---- kernel.orig/linux-2.6.37-psp04.02.00.07/Makefile	2011-12-22 11:30:45.000000000 -0600
-+++ kernel/linux-2.6.37-psp04.02.00.07/Makefile	2012-09-13 12:01:30.667645146 -0600
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/Makefile
++++ kernel/linux-2.6.37-psp04.02.00.07/Makefile
 @@ -1,7 +1,7 @@
  VERSION = 2
  PATCHLEVEL = 6
@@ -67,8 +67,8 @@ Index: kernel/linux-2.6.37-psp04.02.00.07/Makefile
  # *DOCUMENTATION*
 Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/i2c/algos/Kconfig
 ===================================================================
---- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/i2c/algos/Kconfig	2011-12-22 11:30:53.000000000 -0600
-+++ kernel/linux-2.6.37-psp04.02.00.07/drivers/i2c/algos/Kconfig	2012-09-13 12:01:30.667645146 -0600
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/i2c/algos/Kconfig
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/i2c/algos/Kconfig
 @@ -3,7 +3,7 @@
  #
  
@@ -80,8 +80,8 @@ Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/i2c/algos/Kconfig
  	tristate "I2C bit-banging interfaces"
 Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/common/tuners/Kconfig
 ===================================================================
---- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/media/common/tuners/Kconfig	2011-12-22 11:30:50.000000000 -0600
-+++ kernel/linux-2.6.37-psp04.02.00.07/drivers/media/common/tuners/Kconfig	2012-09-13 12:01:30.667645146 -0600
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/media/common/tuners/Kconfig
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/media/common/tuners/Kconfig
 @@ -45,7 +45,7 @@
  	  If unsure say N.
  
@@ -93,8 +93,8 @@ Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/common/tuners/Kconfig
  	tristate "Simple tuner support"
 Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/Kconfig
 ===================================================================
---- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/media/video/Kconfig	2011-12-22 11:30:49.000000000 -0600
-+++ kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/Kconfig	2012-09-18 10:07:13.366166371 -0600
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/media/video/Kconfig
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/Kconfig
 @@ -112,7 +112,7 @@
  #
  
@@ -104,10 +104,18 @@ Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/video/Kconfig
  
  comment "Audio decoders"
  
+@@ -754,6 +754,7 @@
+ config VIDEO_OMAP3
+ 	tristate "OMAP 3 Camera support (EXPERIMENTAL)"
+ 	select OMAP_IOMMU
++	default y
+ 	depends on VIDEO_V4L2 && I2C && VIDEO_V4L2_SUBDEV_API && ARCH_OMAP3 && EXPERIMENTAL
+ 	---help---
+ 	  Driver for an OMAP 3 camera controller.
 Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/dvb/frontends/Kconfig
 ===================================================================
---- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/media/dvb/frontends/Kconfig	2011-12-22 11:30:48.000000000 -0600
-+++ kernel/linux-2.6.37-psp04.02.00.07/drivers/media/dvb/frontends/Kconfig	2012-09-13 12:01:30.667645146 -0600
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/media/dvb/frontends/Kconfig
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/media/dvb/frontends/Kconfig
 @@ -13,7 +13,7 @@
  	  If unsure say N.
  
@@ -117,3 +125,15 @@ Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/dvb/frontends/Kconfig
  
  comment "Multistandard (satellite) frontends"
  	depends on DVB_CORE
+Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/media/Kconfig
+===================================================================
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/media/Kconfig
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/media/Kconfig
+@@ -84,6 +84,7 @@
+ 
+ config VIDEO_V4L2_SUBDEV_API
+ 	bool "V4L2 sub-device userspace API (EXPERIMENTAL)"
++	default y
+ 	depends on VIDEO_DEV && MEDIA_CONTROLLER && EXPERIMENTAL
+ 	---help---
+ 	  Enables the V4L2 sub-device pad-level userspace API used to configure
