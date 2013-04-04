@@ -17,7 +17,7 @@ if ( $ARGV[0] eq "" || $ARGV[1] eq "" || $ARGV[2] eq "" || $ARGV[3] eq "")
 
 select_component("bootloader","BOOTLOADER");
 select_component("kernel","KERNEL");
-generate_kernel_version();
+#generate_kernel_version();
 
 if ( $ARGV[0] eq "" || $ARGV[1] eq "" || $ARGV[2] eq "" || $ARGV[3] eq "")
 {
@@ -102,8 +102,10 @@ sub select_component(){
 			}
 			else
 			{
-				print "kernel directory: $DEVDIR/kernel/$ARGV[3] NOT found!\n\n";
-				exit(1);
+				print "kernel directory: $DEVDIR/kernel/$ARGV[3] NOT found! Maybe using and uncompiled SDK. Selecting: $ARGV[3]\n\n";
+				$lastselection = $ARGV[3];
+				goto SELECTED;
+				#exit(1);
 			}
 		}
 	}
