@@ -1,5 +1,6 @@
 config FS_APPS_FLAC
 	bool "flac 1.2.1"
+	default y
 	help
 	Free Lossless Audio Codec, an audio format similar to MP3, but lossless, 
 	meaning that audio is compressed in FLAC without any loss in quality. 
