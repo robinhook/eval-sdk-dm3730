@@ -1,0 +1,5 @@
+config USER_APPS_EVM_CONFIG
+	bool "Init script for configuring DM3730 EVM"
+	default n
+	help
+	    Configures audio level and video device on DM3730 EVM

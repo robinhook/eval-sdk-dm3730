@@ -1,0 +1,24 @@
+#!/bin/sh
+
+#Configure audio capture:
+echo "Configuring Audio Capture..."
+amixer sset 'Analog' 1 # 6dB amplification
+amixer sset 'Analog Left AUXL' cap
+amixer sset 'Analog Right AUXR' cap
+amixer sset 'TX1' 'Analog'
+amixer sset 'TX1 Digital' 5 # 5db amplification
+
+echo "Configuring Audio Playback..."
+amixer sset 'DAC1 Digital Fine' 40
+amixer sset 'Headset' 2
+amixer sset 'HeadsetL Mixer AudioL1' on
+amixer sset 'HeadsetR Mixer AudioR1' on
+
+echo "Initializing video device tvp514x..."
+#Getting the mayor and minor number for the device
+MAJOR=`cat /sys/bus/media/devices/media0/dev  | cut -d':' -f1`
+MINOR=`cat /sys/bus/media/devices/media0/dev  | cut -d':' -f2`
+# Force /dev/media0 to be created required by the camera sensor
+mknod /dev/media0 c $MAJOR $MINOR
+
+media-ctl -r -l '"tvp514x 3-005c":0->"OMAP3 ISP CCDC":0[1], "OMAP3 ISP CCDC":1->"OMAP3 ISP CCDC output":0[1]'
