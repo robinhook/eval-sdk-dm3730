@@ -1,0 +1,5 @@
+config USER_APPS_BEAGLE_CONFIG
+	bool "Init script for configuring BeagleBoardXM"
+	default y
+	help
+	    Configures audio level and video device on BeagleBoardXM
