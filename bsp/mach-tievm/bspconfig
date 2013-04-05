@@ -1,6 +1,6 @@
 #
 # RidgeRun SDK Config fil
-# Thu Apr  4 17:25:03 2013
+# Fri Apr  5 12:16:42 2013
 #
 
 #
@@ -1043,6 +1043,8 @@ CONFIG_FS_INTERNALS=y
 #
 # User Applications
 #
+# CONFIG_USER_APPS_BEAGLE_CONFIG is not set
+CONFIG_USER_APPS_EVM_CONFIG=y
 # CONFIG_USER_APPS_GSTRRPARSER is not set
 # CONFIG_USER_APPS_GST_VALA is not set
 # CONFIG_USER_APPS_HELLO is not set
