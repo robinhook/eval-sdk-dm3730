@@ -1,0 +1,20 @@
+Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/mmc/host/omap_hsmmc.c
+===================================================================
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/mmc/host/omap_hsmmc.c
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/mmc/host/omap_hsmmc.c
+@@ -1699,11 +1699,13 @@
+ 
+ static int omap_hsmmc_get_ro(struct mmc_host *mmc)
+ {
+-	struct omap_hsmmc_host *host = mmc_priv(mmc);
++	/* Commented in order to avoid Read Only file system */
++/*	struct omap_hsmmc_host *host = mmc_priv(mmc);
+ 
+ 	if (!mmc_slot(host).get_ro)
+ 		return -ENOSYS;
+-	return mmc_slot(host).get_ro(host->dev, 0);
++	return mmc_slot(host).get_ro(host->dev, 0);*/
++	return 0;
+ }
+ 
+ static void omap_hsmmc_init_card(struct mmc_host *mmc, struct mmc_card *card)

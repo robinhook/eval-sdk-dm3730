@@ -1,2 +1,3 @@
 rrsdk-integration-support.patch
 fix_int-ll64_path.patch
+avoid_ro_file_system.patch
