@@ -81,15 +81,24 @@ if ($CONFIG_UBOOT_NOR_FLASH_MEMORY eq "y") {
 } elsif ($CONFIG_UBOOT_NAND_FLASH_MEMORY eq "y") {
     $FLASH_WRITE_CMD="nand write";
     if ($CONFIG_UBOOT_USE_XLOADER){
-        $FLASH_WRITE_IPL_CMD="nand write";
-        if($CONFIG_INSTALLER_IPL_ECC_HW){
-           $FLASH_PRE_IPL_CMD="nandecc hw 2";
-           $FLASH_POST_IPL_CMD="nandecc hw 1";
-        }
-        else {
-           $FLASH_PRE_IPL_CMD="nandecc hw";
-           $FLASH_POST_IPL_CMD="nandecc sw";
-        }
+		# Some machines require ECC CHIP for uboot and not to switch it
+		# after each write.
+		if ($CONFIG_UBOOT_ECC_CHIP){
+		   $FLASH_WRITE_IPL_CMD="nand write";
+		   $FLASH_PRE_IPL_CMD="nandecc hw";
+		   $FLASH_POST_IPL_CMD="nandecc chip";
+		}
+		else {
+		   $FLASH_WRITE_IPL_CMD="nand write";
+		   if($CONFIG_INSTALLER_IPL_ECC_HW){
+		      $FLASH_PRE_IPL_CMD="nandecc hw 2";
+		      $FLASH_POST_IPL_CMD="nandecc hw 1";
+		   }
+		   else {
+		      $FLASH_PRE_IPL_CMD="nandecc hw";
+		      $FLASH_POST_IPL_CMD="nandecc sw";
+		   }
+		}
     } elsif ($CONFIG_UBOOT_USE_MIN){
              $FLASH_WRITE_IPL_CMD="nand write";
              $FLASH_PRE_IPL_CMD="nandecc hw 2";
@@ -506,7 +515,11 @@ sub uboot_network_setup{
 # ==============================================================================
 sub install_bootloader {
     detect_page_size();
-    load_upgrade_bootloader();
+    # Some machines does not allow to run the upgrade uboot image, so we
+    # assume they are using a RR's built SD card to flash the images.
+    if ($CONFIG_UBOOT_UPGRADE_BOOTLOADER_ADDR) {
+       load_upgrade_bootloader();
+    }
     install_bootloader_core();
     # Don't leave upgrade version of bootloader running
     restart_bootloader_uboot();
@@ -650,10 +663,14 @@ sub install_uboot {
 
         # Save
         if ($FLASH_PRE_IPL_CMD && $CONFIG_UBOOT_USE_XLOADER) {
-           send_uboot_cmd($FLASH_PRE_IPL_CMD);
+		   if ($CONFIG_UBOOT_ECC_CHIP) {
+			  send_uboot_cmd($FLASH_POST_IPL_CMD);
+		   } else {
+              send_uboot_cmd($FLASH_PRE_IPL_CMD);
+	       }
         }
         flash_write_cmd_ipl($CONFIG_INSTALLER_LOAD_ADDRS,$OFFSET_IN_BLK,$SIZE_IN_BLK);
-        if ($FLASH_POST_IPL_CMD && $CONFIG_UBOOT_USE_XLOADER) {
+        if ($FLASH_POST_IPL_CMD && $CONFIG_UBOOT_USE_XLOADER && not defined($CONFIG_UBOOT_ECC_CHIP)){
            send_uboot_cmd($FLASH_POST_IPL_CMD);
        }
     }
