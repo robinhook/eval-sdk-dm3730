@@ -39,6 +39,8 @@ include $(DEVDIR)/bsp/mach/Make.conf
 include $(DEVDIR)/bsp/classes/dependencies.defs
 build: dependency_build
 
+unpatch:
+
 preconfig:
 	echo -e "# Automatic generated file by Makefile, don't edit\n\n" >ConfigExtra
 	$(V)for i in `ls` ; do \
