@@ -1,3 +1,4 @@
 configuration_for_sdk.patch
 uboot_env_in_sdcard.patch
 skip_env_on_sd_boot.patch
+ecc_fix.patch
