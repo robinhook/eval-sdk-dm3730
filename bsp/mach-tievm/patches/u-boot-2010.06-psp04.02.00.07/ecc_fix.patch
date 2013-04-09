@@ -29,15 +29,27 @@ Index: u-boot-2010.06/src/drivers/mtd/nand/omap_gpmc.c
 -	 * ti81xx_nand_switch_ecc() below to 1-bit h/w ecc
 -	 */
  	nand->chip_delay = 100;
--
+ 
 -	nand->ecc.mode = NAND_ECC_4BIT_SOFT;
 -
 -	/* Making 1-bit hw ecc (kernel/FS layout) as default ecc scheme */
 -	nand_curr_device = 0;
 -	omap_nand_switch_ecc(NAND_ECC_HW, 1);
-+
 +	/* Making 1-bit hw ecc (kernel/fs layout) as default ecc scheme */
 +	nand->ecc.mode = NAND_ECC_SOFT;
  
  	return 0;
  }
+Index: u-boot-2010.06/src/include/configs/omap3_beagle.h
+===================================================================
+--- u-boot-2010.06.orig/src/include/configs/omap3_beagle.h
++++ u-boot-2010.06/src/include/configs/omap3_beagle.h
+@@ -333,7 +333,7 @@
+ 
+ #define CONFIG_ENV_IS_IN_NAND		1
+ #define ONENAND_ENV_OFFSET		0x260000 /* environment starts here */
+-#define SMNAND_ENV_OFFSET		0x260000 /* environment starts here */
++#define SMNAND_ENV_OFFSET		0x1C0000 /* environment starts here */
+ 
+ #define CONFIG_SYS_ENV_SECT_SIZE	boot_flash_sec
+ #define CONFIG_ENV_OFFSET		boot_flash_off
