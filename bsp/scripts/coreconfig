@@ -6,6 +6,9 @@ my $DEVDIR = $ENV{'DEVDIR'};
 my $lastselection;
 my $selectedmach;
 
+print "  Unpatching SDK components...";
+system "make unpatch";
+
 print "  Select SDK Core components...\n\n";
 select_mach();
 select_component("toolchain","TOOLCHAIN");
