@@ -6,12 +6,13 @@ config UBOOT_NETWORKING
 	bool
 	default y
 	
-config UBOOT_UPGRADE_BOOTLOADER_ADDR
-	string
-	default "0x82000000"
-
 # This variable allows to flash all the images using the ECC by Hardware to the board
 # instead of use it only for xloader. 
 config INSTALLER_IPL_ECC_HW
 	bool
-	default y
+	default n
+
+# Some machines requiere to use ECC CHIP on uboot for a correct operation
+config UBOOT_ECC_CHIP
+        bool
+        default y
