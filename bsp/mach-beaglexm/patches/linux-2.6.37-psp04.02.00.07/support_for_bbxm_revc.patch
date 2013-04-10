@@ -1,7 +1,7 @@
 Index: kernel/linux-2.6.37-psp04.02.00.07/arch/arm/mach-omap2/board-omap3beagle.c
 ===================================================================
---- kernel.orig/linux-2.6.37-psp04.02.00.07/arch/arm/mach-omap2/board-omap3beagle.c	2012-09-20 08:00:35.704663288 -0600
-+++ kernel/linux-2.6.37-psp04.02.00.07/arch/arm/mach-omap2/board-omap3beagle.c	2012-09-20 08:18:39.481046283 -0600
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/arch/arm/mach-omap2/board-omap3beagle.c
++++ kernel/linux-2.6.37-psp04.02.00.07/arch/arm/mach-omap2/board-omap3beagle.c
 @@ -59,6 +59,7 @@
   *	C1_3	= GPIO173, GPIO172, GPIO171: 1 1 0
   *	C4	= GPIO173, GPIO172, GPIO171: 1 0 1
@@ -78,3 +78,18 @@ Index: kernel/linux-2.6.37-psp04.02.00.07/arch/arm/mach-omap2/board-omap3beagle.
  		gpio_request(gpio + 1, "nDVI_PWR_EN");
  		gpio_direction_output(gpio + 1, 0);
  		gpio_request(gpio + 2, "DVI_LDO_EN");
+Index: kernel/linux-2.6.37-psp04.02.00.07/drivers/mmc/core/core.c
+===================================================================
+--- kernel.orig/linux-2.6.37-psp04.02.00.07/drivers/mmc/core/core.c
++++ kernel/linux-2.6.37-psp04.02.00.07/drivers/mmc/core/core.c
+@@ -496,6 +496,10 @@
+ 	remove_wait_queue(&host->wq, &wait);
+ 	if (!stop)
+ 		mmc_host_enable(host);
++
++	/* Give some time or BUSY detect may not work correctly */
++        mmc_delay(40);
++
+ 	return stop;
+ }
+ 
