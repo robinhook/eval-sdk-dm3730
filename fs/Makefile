@@ -112,7 +112,7 @@ endif # HAS_NET
 
 depmod:
 	$(V) if [ -d $(FSROOT)/lib/modules/$(KERNELVERSION) ] ; then \
-		depmod -ae -b $(FSROOT) -F $(DEVDIR)/kernel/$(KERNEL)/System.map \
+		/sbin/depmod -ae -b $(FSROOT) -F $(DEVDIR)/kernel/$(KERNEL)/System.map \
 		-v $(KERNELVERSION) $(QOUT); \
 	fi
 
@@ -125,7 +125,7 @@ build: build_start $(FSROOT) $(FSDEVROOT) $(foreach COMP, $(FS_COMPONENTS), $(CO
 	$(V) $(LDCONFIG) -r $(FSROOT) $(QOUT)
 # Calculate module dependencies
 	$(V) if [ -d $(FSROOT)/lib/modules/$(KERNELVERSION) ] ; then \
-		depmod -ae -b $(FSROOT) -F $(DEVDIR)/kernel/$(KERNEL)/System.map \
+		/sbin/depmod -ae -b $(FSROOT) -F $(DEVDIR)/kernel/$(KERNEL)/System.map \
 		-v $(KERNELVERSION) $(QOUT); \
 	fi
 	$(V) $(ECHO) "Installing Overlay"
