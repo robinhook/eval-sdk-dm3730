@@ -56,3 +56,7 @@ preconfig:
 	done
 
 unpatch: dependency_unpatch
+
+force_build_execute: build
+
+include $(CLASSES)/force_build.defs

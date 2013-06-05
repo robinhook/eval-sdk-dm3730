@@ -58,4 +58,7 @@ patch: dependency_patch
 
 unpatch: dependency_unpatch
 
+force_build_execute: build
+
 include $(DEVDIR)/bsp/classes/dependencies.defs
+include $(CLASSES)/force_build.defs

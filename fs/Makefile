@@ -1,6 +1,6 @@
 #$L$
 #
-# Copyright (C) 2010 Ridgerun (http://www.ridgerun.com).
+# Copyright (C) 2010-2013 Ridgerun (http://www.ridgerun.com).
 #
 #$L$
 
@@ -294,3 +294,9 @@ $(foreach COMP, $(FS_COMPONENTS), $(eval $(call COMP_template,$(COMP),_unpatch,u
 $(foreach COMP, $(FS_COMPONENTS), $(eval $(call COMP_template,$(COMP),_clean,clean)))
 $(foreach COMP, $(FS_COMPONENTS), $(eval $(call COMP_template,$(COMP),_buildfs,buildfs)))
 $(foreach COMP, $(FS_COMPONENTS), $(eval $(call COMP_template,$(COMP),_cmdline,cmdline)))
+
+force_build_execute:
+	$(V)$(MAKE) build
+
+include $(CLASSES)/force_build.defs
+
