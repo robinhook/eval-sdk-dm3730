@@ -37,9 +37,10 @@ endif
 include $(DEVDIR)/bsp/mach/Make.conf
 
 include $(DEVDIR)/bsp/classes/dependencies.defs
-build: dependency_build
 
-unpatch:
+patch: dependency_patch
+
+build: dependency_build
 
 preconfig:
 	echo -e "# Automatic generated file by Makefile, don't edit\n\n" >ConfigExtra
@@ -52,3 +53,5 @@ preconfig:
 		echo -e "source fs/arch/$$i/Config \n\n" >>ConfigExtra ; \
 	    fi ; \
 	done
+
+unpatch: dependency_unpatch
